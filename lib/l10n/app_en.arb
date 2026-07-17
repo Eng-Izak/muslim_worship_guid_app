@@ -1,0 +1,40 @@
+{
+    "@@locale": "en",
+    "appName": "Muslim Worship Guide",
+    "quranStudy": "Quran Study",
+    "adhkar": "Adhkar",
+    "qiblaDirection": "Qibla Direction",
+    "prayerTimes": "Prayer Times",
+    "hadithCircle": "Hadith Circle",
+    "radio": "Radio",
+    "settings": "Settings",
+    "appLanguage": "App Language",
+    "themeMode": "Theme Mode",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "fontFamily": "Font Family",
+    "fontSize": "Font Size",
+    "distanceToKaaba": "Distance to Kaaba: {distance} km",
+    "@distanceToKaaba": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "deflectionAngle": "Deflection Angle: {angle}°",
+    "@deflectionAngle": {
+        "placeholders": {
+            "angle": {
+                "type": "String"
+            }
+        }
+    },
+    "qiblaAccuracyHint": "Place the phone flat parallel to the ground for highest accuracy",
+    "north": "North",
+    "south": "South",
+    "messengerSaid": "The Messenger of Allah ﷺ said:",
+    "nextPrayer": "Next Prayer",
+    "remainingTime": "Remaining Time"
+}

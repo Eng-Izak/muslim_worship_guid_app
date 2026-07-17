@@ -1,0 +1,24 @@
+[33m6c98dcd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m ..
+[33m2458409[m finishing quran screen part 1
+[33m0a8670e[m just some files configrations
+[33mb85b450[m some refactor for code and files
+[33m8b17e2c[m finish prayer times screen Ui and Logic
+[33m8326ae3[m convert from use api to get prayer times data to get this data from adhan_dart package
+[33m55ecf62[m create the holder screens for future features in the app
+[33m486353e[m some additional configrations for set the location by right way
+[33m618bae5[m activate the location sevice for the real spicific location of the device
+[33m059d0af[m some UI editing in Next Prayer time in home screen and directional of view in prayer times screen
+[33m1ec6df9[m some refactor of project by using only PrayerMonthCalendarCubit for next prayer time , day prayers times and month prayers times
+[33m4dbbb61[m return the wedgit and models folders to core folder , change the settings of cubit to customize the card of next prayer in times screen
+[33ma40b787[m change location of widgets folder from core to the shared folder in core folder
+[33mb462a99[m add some setup hive to store month prayers times in local storage and some project code refactor
+[33m0f730f6[m prayer times screen refactor
+[33mc2a2747[m add logo and my personal brand
+[33m358a97e[m Add app developer footer widget and add special update for upcoming prayer time in all screens
+[33md939a4e[m Before use Hive to store some details in splash screen
+[33m99abd24[m finish some UI & logic Details for Upcoming prayer in home screen and prayer times screen
+[33mb12f00f[m finish some UI & logic Details for Upcoming prayer in home screen and prayer times screen
+[33m32666c6[m befor setup geolocator to detect the locaction in app
+[33m69f8967[m finish some details in ui
+[33m53c9bfc[m main ui of home view and prayer times view are done
+[33m3c869e0[m create struture of TotalMuslimApp

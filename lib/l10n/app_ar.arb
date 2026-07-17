@@ -1,0 +1,40 @@
+{
+    "@@locale": "ar",
+    "appName": "دليل العبادة المسلم",
+    "quranStudy": "القرآن الكريم",
+    "adhkar": "الأذكار",
+    "qiblaDirection": "اتجاه القبلة",
+    "prayerTimes": "مواقيت الصلاة",
+    "hadithCircle": "الأربعون النووية",
+    "radio": "الإذاعة",
+    "settings": "الإعدادات",
+    "appLanguage": "لغة التطبيق",
+    "themeMode": "نمط العرض",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام",
+    "fontFamily": "نوع الخط",
+    "fontSize": "حجم الخط",
+    "distanceToKaaba": "المسافة إلى الكعبة المشرفة: {distance} كم",
+    "@distanceToKaaba": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "deflectionAngle": "زاوية الانحراف: {angle}°",
+    "@deflectionAngle": {
+        "placeholders": {
+            "angle": {
+                "type": "String"
+            }
+        }
+    },
+    "qiblaAccuracyHint": "ضع الهاتف في وضع مستوٍ موازٍ للأرض للحصول على أعلى دقة للاتجاه",
+    "north": "شمال",
+    "south": "جنوب",
+    "messengerSaid": "قال رسول الله ﷺ :",
+    "nextPrayer": "الصلاة القادمة",
+    "remainingTime": "الوقت المتبقي"
+}

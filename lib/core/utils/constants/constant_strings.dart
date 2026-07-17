@@ -1,0 +1,3 @@
+class ConstantStrings {
+  ConstantStrings._();
+}

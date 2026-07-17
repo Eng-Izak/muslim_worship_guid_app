@@ -1,0 +1,79 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:prayer_times_quran_azkar_app/core/shared/widgets/app_developer_footer_widget.dart';
+import 'package:prayer_times_quran_azkar_app/features/radio/logic/cubit/radio_cubit.dart';
+import 'widgets/radio_station_card_widget.dart';
+
+class RadioScreen extends StatelessWidget {
+  const RadioScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => RadioCubit()..loadRadioStations(),
+      child: Scaffold(
+        backgroundColor: const Color(
+          0xFF1C4537,
+        ), // الخلفية الزيتونية الداكنة لراحة العين
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF215443),
+          elevation: 0,
+          title: Text(
+            "إذاعات القرآن الكريم",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFFC5A85A),
+            ),
+          ),
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Color(0xFFC5A85A)),
+        ),
+        body: BlocBuilder<RadioCubit, RadioState>(
+          builder: (context, state) {
+            if (state is RadioLoadingData) {
+              return Center(
+                child: CircularProgressIndicator(color: Color(0xFFC5A85A)),
+              );
+            } else if (state is RadioLoadedData) {
+              return Directionality(
+                textDirection: TextDirection.rtl,
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(top: 10, bottom: 20),
+                  itemCount: state.stations.length,
+                  itemBuilder: (context, index) {
+                    final station = state.stations[index];
+                    final isCurrent = state.playingStationId == station.id;
+
+                    return RadioStationCardWidget(
+                      station: station,
+                      isCurrentStation: isCurrent,
+                      isPlaying: state.isPlaying,
+                      isAudioLoading: state.isAudioLoading,
+                      onPlayTap: () {
+                        context.read<RadioCubit>().toggleRadioPlayback(
+                          station.url,
+                          station.id,
+                        );
+                      },
+                    );
+                  },
+                ),
+              );
+            } else if (state is RadioErrorData) {
+              return Center(
+                child: Text(
+                  state.errorMessage,
+                  style: TextStyle(
+                    color: Colors.red,
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        bottomNavigationBar: const AppDeveloperFooterWidget(),
+      ),
+    );
+  }
+}
