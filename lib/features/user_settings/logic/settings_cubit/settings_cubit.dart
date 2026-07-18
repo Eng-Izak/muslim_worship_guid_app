@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -12,10 +13,16 @@ class SettingsCubit extends Cubit<SettingsState> {
       'Cairo'; // خطك الإسلامي الأساسي الفاخر
   static const double _defaultFontScale = 1.0;
 
+  /// استنتاج اللغة الافتراضية من لغة الجهاز عند أول تشغيل
+  static String get _systemDefaultLang {
+    final String deviceLang = Platform.localeName.split('_').first.toLowerCase();
+    return (deviceLang == 'en') ? 'en' : 'ar';
+  }
+
   SettingsCubit()
     : super(
         SettingsState(
-          locale: const Locale(_defaultLang),
+          locale: const Locale(_defaultLang), // سيُحدَّث فوراً في _loadSavedSettings باللغة الحقيقية
           fontFamily: _defaultFontFamily,
           fontScale: _defaultFontScale,
         ),
@@ -25,8 +32,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// تحميل كافة الإعدادات المخزنة من الـ Hive عند تهيئة الكيوبت
   void _loadSavedSettings() {
+    // إذا لم يختر المستخدم لغة من قبل، نستخدم لغة الجهاز تلقائياً
     final String lang =
-        _settingsBox.get('language_code', defaultValue: _defaultLang) as String;
+        _settingsBox.get('language_code', defaultValue: _systemDefaultLang) as String;
     final String font =
         _settingsBox.get('font_family', defaultValue: _defaultFontFamily)
             as String;

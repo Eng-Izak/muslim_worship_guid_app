@@ -32,7 +32,7 @@ class NotificationService {
 
     // إعدادات أندرويد (أيقونة التطبيق كأيقونة افتراضية للإشعار)
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     // إعدادات iOS/Darwin
     const DarwinInitializationSettings initializationSettingsDarwin =

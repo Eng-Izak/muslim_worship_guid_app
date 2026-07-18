@@ -20,9 +20,10 @@ void main() async {
   await notificationService.init();
   await ForegroundNotificationService.init();
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
-    androidNotificationChannelName: 'تشغيل الصوتيات',
+    androidNotificationChannelId: 'com.muslimworshipguid.audio',
+    androidNotificationChannelName: 'MuslimWorshipGuid - Audio',
     androidNotificationOngoing: true,
+    androidNotificationIcon: 'mipmap/launcher_icon',
   );
   
   Bloc.observer = StatesObserver();

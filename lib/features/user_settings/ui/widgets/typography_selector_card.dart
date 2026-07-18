@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/settings_cubit/settings_cubit.dart';
 
 class TypographySelectorCard extends StatelessWidget {
@@ -14,6 +15,7 @@ class TypographySelectorCard extends StatelessWidget {
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, state) {
         final settingsCubit = context.read<SettingsCubit>();
+        final isAr = state.locale.languageCode == 'ar';
 
         return Card(
           color: const Color(0xFF215443),
@@ -27,19 +29,22 @@ class TypographySelectorCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // --- 1. اختيار اللغة ---
-                _buildSectionHeader(Icons.language_rounded, "لغة التطبيق"),
+                _buildSectionHeader(
+                  Icons.language_rounded,
+                  Localization.tr(context, ar: 'لغة التطبيق', en: 'App Language'),
+                ),
                 const SizedBox(height: 10),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
-                    state.locale.languageCode == 'ar' ? "العربية" : "English",
+                    isAr ? 'العربية' : 'English',
                     style: const TextStyle(
                       color: Colors.white,
                       fontFamily: 'Cairo',
                     ),
                   ),
                   trailing: Switch(
-                    value: state.locale.languageCode == 'en',
+                    value: !isAr,
                     activeThumbColor: const Color(0xFFC5A85A),
                     activeTrackColor: const Color(0xFF1C4537),
                     inactiveThumbColor: const Color(0xFFC5A85A),
@@ -54,7 +59,7 @@ class TypographySelectorCard extends StatelessWidget {
                 // --- 2. اختيار نوع الخط ---
                 _buildSectionHeader(
                   Icons.font_download_rounded,
-                  "نوع الخط المفضل",
+                  Localization.tr(context, ar: 'نوع الخط المفضل', en: 'Preferred Font'),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -92,7 +97,7 @@ class TypographySelectorCard extends StatelessWidget {
                 // --- 3. التحكم بحجم الخط (Slider) ---
                 _buildSectionHeader(
                   Icons.format_size_rounded,
-                  "حجم خط النصوص والآيات",
+                  Localization.tr(context, ar: 'حجم الخط', en: 'Font Size'),
                 ),
                 Slider(
                   value: state.fontScale,
@@ -117,9 +122,9 @@ class TypographySelectorCard extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Text(
-                        "شاشة المعاينة الحية",
-                        style: TextStyle(
+                      Text(
+                        Localization.tr(context, ar: 'شاشة المعاينة الحية', en: 'Live Preview'),
+                        style: const TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 11,
                           color: Color(0xFFC5A85A),
@@ -127,7 +132,7 @@ class TypographySelectorCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "«اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ»",
+                        '«اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ»',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.getFont(
                           state.fontFamily,

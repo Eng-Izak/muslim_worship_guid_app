@@ -7,7 +7,7 @@ import 'package:prayer_times_quran_azkar_app/features/home/logic/cubit/location_
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/logic/cubit/prayer_times_cubit.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/settings_cubit/settings_cubit.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/theme_cubit/theme_cubit.dart';
-
+import 'package:prayer_times_quran_azkar_app/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class TotalMuslimApp extends StatelessWidget {
@@ -39,11 +39,19 @@ class TotalMuslimApp extends StatelessWidget {
                   debugShowCheckedModeBanner: false,
                   locale: settingsState.locale,
                   localizationsDelegates: const [
+                    AppLocalizations.delegate,
                     GlobalMaterialLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                   ],
                   supportedLocales: const [Locale('ar'), Locale('en')],
+                  builder: (context, child) {
+                    final isArabic = settingsState.locale.languageCode == 'ar';
+                    return Directionality(
+                      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+                      child: child!,
+                    );
+                  },
                   theme: ThemeData.light(useMaterial3: true).copyWith(
                     textTheme: GoogleFonts.getTextTheme(
                       settingsState.fontFamily,
