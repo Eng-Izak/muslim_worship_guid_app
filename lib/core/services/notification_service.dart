@@ -211,18 +211,35 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
     String? payload,
+    String? soundFileName, // اسم ملف الصوت بدون امتداد (مثل 'adhan' أو 'adhan_fajr')
   }) async {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          'scheduled_channel',
-          'التنبيهات المجدولة',
-          channelDescription: 'إشعارات مجدولة لمواقيت الصلوات والأذكار',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          fullScreenIntent: true,
-          category: AndroidNotificationCategory.alarm,
-        );
+    // بناء تفاصيل إشعار أندرويد بناءً على وجود صوت مخصص
+    final AndroidNotificationDetails androidDetails;
+    if (soundFileName != null) {
+      // استخدام صوت الأذان من موارد التطبيق الخام (android/app/src/main/res/raw/)
+      androidDetails = AndroidNotificationDetails(
+        'adhan_channel_$soundFileName', // قناة منفصلة لكل صوت لتجنب تعارض الإعداد
+        'قناة أذان الصلاة',
+        channelDescription: 'إشعارات أذان الصلوات الخمس بصوت الأذان',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound(soundFileName),
+        fullScreenIntent: true,
+        category: AndroidNotificationCategory.alarm,
+      );
+    } else {
+      androidDetails = const AndroidNotificationDetails(
+        'scheduled_channel',
+        'التنبيهات المجدولة',
+        channelDescription: 'إشعارات مجدولة لمواقيت الصلوات والأذكار',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        fullScreenIntent: true,
+        category: AndroidNotificationCategory.alarm,
+      );
+    }
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -230,7 +247,7 @@ class NotificationService {
       presentSound: true,
     );
 
-    const NotificationDetails platformDetails = NotificationDetails(
+    final NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );

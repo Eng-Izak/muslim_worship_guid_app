@@ -240,17 +240,46 @@ class PrayerCubit extends Cubit<PrayerStates> {
       // إلغاء الجدولة القديمة لمنع التكرار
       await notificationService.cancelAllNotifications();
 
-      final prayers = {
-        1: {'name': 'الفجر', 'time': prayerTimes.fajr},
-        2: {'name': 'الظهر', 'time': prayerTimes.dhuhr},
-        3: {'name': 'العصر', 'time': prayerTimes.asr},
-        4: {'name': 'المغرب', 'time': prayerTimes.maghrib},
-        5: {'name': 'العشاء', 'time': prayerTimes.isha},
-      };
+      final now = DateTime.now();
 
-      prayers.forEach((id, info) async {
-        final String name = info['name'] as String;
-        final DateTime time = info['time'] as DateTime;
+      // قائمة الصلوات الخمس بأسمائها ومواقيتها
+      final prayers = [
+        {'id': 1, 'name': 'الفجر',  'time': prayerTimes.fajr},
+        {'id': 2, 'name': 'الظهر',  'time': prayerTimes.dhuhr},
+        {'id': 3, 'name': 'العصر',  'time': prayerTimes.asr},
+        {'id': 4, 'name': 'المغرب', 'time': prayerTimes.maghrib},
+        {'id': 5, 'name': 'العشاء', 'time': prayerTimes.isha},
+      ];
+
+      // ✅ استخدام for loop بدلاً من forEach لضمان عمل await بشكل صحيح
+      for (final info in prayers) {
+        final int id       = info['id'] as int;
+        final String name  = info['name'] as String;
+        DateTime time      = info['time'] as DateTime;
+
+        // إذا مضى وقت الصلاة اليوم، نجدول نفس الصلاة لليوم التالي
+        if (time.isBefore(now)) {
+          if (_currentCoordinates != null) {
+            final tomorrow = now.add(const Duration(days: 1));
+            final tomorrowPrayerTimes = PrayerTimes(
+              date: tomorrow,
+              coordinates: _currentCoordinates!,
+              calculationParameters: params,
+            );
+            switch (id) {
+              case 1: time = tomorrowPrayerTimes.fajr;    break;
+              case 2: time = tomorrowPrayerTimes.dhuhr;   break;
+              case 3: time = tomorrowPrayerTimes.asr;     break;
+              case 4: time = tomorrowPrayerTimes.maghrib; break;
+              case 5: time = tomorrowPrayerTimes.isha;    break;
+            }
+          } else {
+            continue; // تخطي إذا لم تتوفر الإحداثيات
+          }
+        }
+
+        // صوت الفجر مختلف: أذان الفجر مع "الصلاة خير من النوم"
+        final String soundFile = (name == 'الفجر') ? 'adhan_fajr' : 'adhan';
 
         await notificationService.scheduleNotification(
           id: id,
@@ -258,8 +287,9 @@ class PrayerCubit extends Cubit<PrayerStates> {
           body: 'الله أكبر، الله أكبر... حان الآن وقت صلاة $name حسب توقيتك المحلي.',
           scheduledTime: time,
           payload: 'adhan_alarm|$name|${DateFormat.jm().format(time.toLocal())}',
+          soundFileName: soundFile,
         );
-      });
+      }
     } catch (e) {
       log("حدث خطأ أثناء جدولة إشعارات الصلاة: $e");
     }

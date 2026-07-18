@@ -3,40 +3,28 @@ import 'dart:developer' as dev;
 import 'package:bloc/bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'location_state.dart';
 
 class LocationCubit extends Cubit<LocationState> {
-  final Box _settingsBox = Hive.box('settings_box');
-
   LocationCubit() : super(LocationInitial());
 
   /// فحص الكاش داخل الـ Splash Screen
   void checkLocationOnSplash() async {
-    // 🔥 خطوة أمان: تصفير الحالة مؤقتاً لضمان التقاط الـ Listener للتغيير عند عمل Hot Restart
     emit(LocationInitial());
 
-    final dynamic cachedLat = _settingsBox.get('latitude');
-    final dynamic cachedLng = _settingsBox.get('longitude');
-    final dynamic cachedCity = _settingsBox.get('cityName') ?? "موقعي الحالي";
+    final prefs = await SharedPreferences.getInstance();
+    final double? cachedLat = prefs.getDouble('lat');
+    final double? cachedLng = prefs.getDouble('lng');
+    final String cachedCity = prefs.getString('city_name') ?? "موقعي الحالي";
 
     if (cachedLat != null && cachedLng != null) {
-      final double lat = double.parse(cachedLat.toString());
-      final double lng = double.parse(cachedLng.toString());
-
-      // حفظ في SharedPreferences أيضاً ليكون متاحاً للـ Isolate الخلفي
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble('lat', lat);
-      await prefs.setDouble('lng', lng);
-      await prefs.setString('city_name', cachedCity.toString());
-
       emit(LocationSuccess(
-        latitude: lat,
-        longitude: lng,
+        latitude: cachedLat,
+        longitude: cachedLng,
         isFromCache: true,
-        cityName: cachedCity.toString(),
+        cityName: cachedCity,
       ));
     } else {
       emit(LocationRequired());
@@ -74,13 +62,7 @@ class LocationCubit extends Cubit<LocationState> {
       // حل اسم المدينة
       final String cityName = await _getCityName(position.latitude, position.longitude);
 
-      // حفظ الإحداثيات واسم المدينة في الكاش فوراً وتأكيد الحفظ بالـ flush
-      await _settingsBox.put('latitude', position.latitude);
-      await _settingsBox.put('longitude', position.longitude);
-      await _settingsBox.put('cityName', cityName);
-      await _settingsBox.flush(); // تأمين البيانات بالهاردوير لمنع الفقد عند الـ Hot Restart
-
-      // حفظ في SharedPreferences لـ Isolate الخدمة الخلفية
+      // حفظ الإحداثيات واسم المدينة في SharedPreferences (المخزن الموحد للتطبيق والخدمة الخلفية)
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('lat', position.latitude);
       await prefs.setDouble('lng', position.longitude);
@@ -108,11 +90,7 @@ class LocationCubit extends Cubit<LocationState> {
       final Position position = await _determinePosition();
       final String cityName = await _getCityName(position.latitude, position.longitude);
 
-      await _settingsBox.put('latitude', position.latitude);
-      await _settingsBox.put('longitude', position.longitude);
-      await _settingsBox.put('cityName', cityName);
-      await _settingsBox.flush(); // تأمين البيانات بالهاردوير
-
+      // حفظ الإحداثيات واسم المدينة في SharedPreferences (المخزن الموحد للتطبيق والخدمة الخلفية)
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('lat', position.latitude);
       await prefs.setDouble('lng', position.longitude);

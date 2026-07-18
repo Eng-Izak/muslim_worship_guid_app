@@ -6,6 +6,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
 
@@ -35,7 +36,7 @@ class ForegroundNotificationService {
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(60000), // تحديث كل دقيقة واحدة بناءً على طلب المستخدم
+        eventAction: ForegroundTaskEventAction.repeat(1000), // تحديث كل ثانية لعرض العد التنازلي بالثواني
         autoRunOnBoot: true,
         allowWakeLock: true,
         allowWifiLock: true,
@@ -56,15 +57,66 @@ class ForegroundNotificationService {
     await prefs.setString('city_name', cityName);
 
     if (await FlutterForegroundTask.isRunningService) {
-      // إذا كانت الخدمة تعمل، نقوم بتحديث البيانات فوراً
-      await updateNotificationData(latitude, longitude, cityName);
-      return;
+      await stop();
     }
 
-    // بدء الخدمة مع أزرار التحكم
+    // حساب النص الأولي للإشعار لتجنب ظهور "جاري حساب المواقيت..." المؤقت
+    String initialText = cityName;
+    try {
+      final now = DateTime.now();
+      final coordinates = Coordinates(latitude, longitude);
+      final params = CalculationParameters(
+        method: CalculationMethod.egyptian,
+        fajrAngle: 19.5,
+        ishaAngle: 17.5,
+        madhab: Madhab.shafi,
+      );
+
+      final prayerTimes = PrayerTimes(
+        date: now,
+        coordinates: coordinates,
+        calculationParameters: params,
+      );
+
+      Prayer nextPrayer = prayerTimes.nextPrayer();
+      DateTime nextPrayerTime;
+      String nextPrayerNameAr;
+
+      if (nextPrayer == Prayer.fajrAfter) {
+        final tomorrow = now.add(const Duration(days: 1));
+        final tomorrowPrayerTimes = PrayerTimes(
+          date: tomorrow,
+          coordinates: coordinates,
+          calculationParameters: params,
+        );
+        nextPrayerTime = tomorrowPrayerTimes.fajr;
+        nextPrayerNameAr = "الفجر";
+      } else {
+        nextPrayerTime = prayerTimes.timeForPrayer(nextPrayer);
+        nextPrayerNameAr = nextPrayer.toPrayerNameAr;
+      }
+
+      final difference = nextPrayerTime.difference(now);
+      if (!difference.isNegative) {
+        final hours = difference.inHours;
+        final minutes = difference.inMinutes % 60;
+        final seconds = difference.inSeconds % 60;
+        final String hoursStr = hours.toString().padLeft(2, '0');
+        final String minutesStr = minutes.toString().padLeft(2, '0');
+        final String secondsStr = seconds.toString().padLeft(2, '0');
+        final formattedTime = DateFormat('hh:mm a', 'ar').format(nextPrayerTime.toLocal());
+        initialText = "متبقي $hoursStr:$minutesStr:$secondsStr على $nextPrayerNameAr ($formattedTime)";
+      } else {
+        initialText = "حان الآن موعد صلاة $nextPrayerNameAr";
+      }
+    } catch (e) {
+      log("Error calculating initial text: $e");
+    }
+
+    // بدء الخدمة مع أزرار التحكم والنص الأولي المحسوب بدقة
     await FlutterForegroundTask.startService(
       notificationTitle: 'جاري حساب المواقيت...',
-      notificationText: cityName,
+      notificationText: initialText,
       callback: startCallback,
       notificationButtons: [
         const NotificationButton(id: 'update_location', text: 'تحديث الموقع'),
@@ -126,13 +178,14 @@ class ForegroundNotificationService {
       if (!difference.isNegative) {
         final hours = difference.inHours;
         final minutes = difference.inMinutes % 60;
-        final formattedTime = DateFormat('hh:mm a', 'ar').format(nextPrayerTime.toLocal());
+        final seconds = difference.inSeconds % 60;
         
-        if (hours > 0) {
-          countdownText = "$hours:$minutes متبقي على $nextPrayerNameAr ($formattedTime)";
-        } else {
-          countdownText = "$minutes دقيقة متبقي على $nextPrayerNameAr ($formattedTime)";
-        }
+        final String hoursStr = hours.toString().padLeft(2, '0');
+        final String minutesStr = minutes.toString().padLeft(2, '0');
+        final String secondsStr = seconds.toString().padLeft(2, '0');
+        
+        final formattedTime = DateFormat('hh:mm a', 'ar').format(nextPrayerTime.toLocal());
+        countdownText = "متبقي $hoursStr:$minutesStr:$secondsStr على $nextPrayerNameAr ($formattedTime)";
       } else {
         countdownText = "حان الآن موعد صلاة $nextPrayerNameAr";
       }
@@ -173,6 +226,11 @@ class NotificationTaskHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    try {
+      await initializeDateFormatting('ar', null);
+    } catch (e) {
+      log("Error initializing date formatting in background: $e");
+    }
     await _loadLocationData();
     await _updateNotification();
   }
