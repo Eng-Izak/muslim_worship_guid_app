@@ -7,6 +7,10 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/services.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:prayer_times_quran_azkar_app/app/muslim_app.dart';
+import 'package:prayer_times_quran_azkar_app/core/routing/routing_names.dart';
+
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -18,8 +22,7 @@ class NotificationService {
 
     // الحصول على المنطقة الزمنية للجهاز وتعيينها كمنطقة زمنية افتراضية
     try {
-      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-      final String timeZoneName = timezoneInfo.identifier;
+      final String timeZoneName = (await FlutterTimezone.getLocalTimezone()).identifier;
       tz.setLocalLocation(tz.getLocation(timeZoneName));
       log("Timezone initialized successfully: $timeZoneName");
     } catch (e) {
@@ -61,11 +64,58 @@ class NotificationService {
     // تهيئة الحزمة وتعيين دالة الاستجابة عند الضغط على الإشعار
     await _notificationsPlugin.initialize(
       settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
         log("تم النقر على الإشعار: ${response.payload}");
-        // هنا يمكن إضافة منطق الانتقال لصفحة معينة في التطبيق عند الحاجة
+        final payload = response.payload;
+        if (payload != null && payload.startsWith('adhan_alarm')) {
+          final parts = payload.split('|');
+          if (parts.length >= 3) {
+            final String name = parts[1];
+            final String time = parts[2];
+
+            final prefs = await SharedPreferences.getInstance();
+            final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
+
+            TotalMuslimApp.navigatorKey.currentState?.pushNamed(
+              RoutingNames.adhanAlarm.route,
+              arguments: {
+                'prayerName': name,
+                'prayerTime': time,
+                'cityName': cityName,
+              },
+            );
+          }
+        }
       },
     );
+
+    // التحقق مما إذا كان تشغيل التطبيق قد تم عبر النقر على إشعار الأذان
+    final NotificationAppLaunchDetails? launchDetails =
+        await _notificationsPlugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      final payload = launchDetails?.notificationResponse?.payload;
+      if (payload != null && payload.startsWith('adhan_alarm')) {
+        Future.delayed(const Duration(milliseconds: 1000), () async {
+          final parts = payload.split('|');
+          if (parts.length >= 3) {
+            final String name = parts[1];
+            final String time = parts[2];
+
+            final prefs = await SharedPreferences.getInstance();
+            final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
+
+            TotalMuslimApp.navigatorKey.currentState?.pushNamed(
+              RoutingNames.adhanAlarm.route,
+              arguments: {
+                'prayerName': name,
+                'prayerTime': time,
+                'cityName': cityName,
+              },
+            );
+          }
+        });
+      }
+    }
   }
 
   /// طلب صلاحيات الإشعارات (متوافق مع Android 13+ و iOS)
@@ -170,6 +220,8 @@ class NotificationService {
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
+          fullScreenIntent: true,
+          category: AndroidNotificationCategory.alarm,
         );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(

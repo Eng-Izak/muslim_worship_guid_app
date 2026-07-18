@@ -11,6 +11,8 @@ import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/theme_
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class TotalMuslimApp extends StatelessWidget {
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  
   const TotalMuslimApp({super.key});
 
   @override
@@ -33,6 +35,7 @@ class TotalMuslimApp extends StatelessWidget {
                   textScaler: TextScaler.linear(settingsState.fontScale),
                 ),
                 child: MaterialApp(
+                  navigatorKey: TotalMuslimApp.navigatorKey,
                   debugShowCheckedModeBanner: false,
                   locale: settingsState.locale,
                   localizationsDelegates: const [

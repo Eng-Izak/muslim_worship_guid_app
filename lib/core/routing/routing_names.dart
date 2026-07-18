@@ -7,7 +7,8 @@ enum RoutingNames {
   userSettings("/user_settings"),
   quran("/quran"),
   radio("/radio"),
-  qibla("/qibla");
+  qibla("/qibla"),
+  adhanAlarm("/adhan_alarm");
 
   final String route;
   const RoutingNames(this.route);

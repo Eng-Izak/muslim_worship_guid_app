@@ -12,6 +12,8 @@ import 'package:prayer_times_quran_azkar_app/features/radio/ui/radio_screen.dart
 import 'package:prayer_times_quran_azkar_app/features/splash/ui/splash_screen.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/user_settings_screen.dart';
 
+import 'package:prayer_times_quran_azkar_app/features/prayer_times/ui/adhan_alarm_screen.dart';
+
 class RoutingRouter {
   RoutingRouter._();
   static Route onGenerateRoute(RouteSettings settings) {
@@ -39,6 +41,15 @@ class RoutingRouter {
         return MaterialPageRoute(builder: (_) => QiblaScreen());
       case RoutingNames.radio:
         return MaterialPageRoute(builder: (_) => RadioScreen());
+      case RoutingNames.adhanAlarm:
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        return MaterialPageRoute(
+          builder: (_) => AdhanAlarmScreen(
+            prayerName: args['prayerName'] ?? 'الصلاة',
+            prayerTime: args['prayerTime'] ?? '00:00',
+            cityName: args['cityName'] ?? 'موقعي الحالي',
+          ),
+        );
 
       default:
         return MaterialPageRoute(builder: (_) => Scaffold());

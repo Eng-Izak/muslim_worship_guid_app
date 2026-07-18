@@ -38,6 +38,9 @@ dependencies:
   flutter_local_notifications: ^22.0.1
   timezone: ^0.11.1
   flutter_timezone: ^5.1.0
+  flutter_foreground_task: ^10.0.0
+  just_audio_background: ^0.0.1-beta.17
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -57,3 +60,4 @@ flutter:
     - assets/json/nawawi_forty.json.gz
     - assets/json/azkars.json.gz
     - assets/json/radio_stations.json.gz
+    - assets/audio/

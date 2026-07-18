@@ -17,7 +17,7 @@ class SurahDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => SurahDetailsCubit()..loadSurahAyahs(surah.number),
+      create: (context) => SurahDetailsCubit()..loadSurahAyahs(surah.number, surahName: surah.name),
       child: DefaultTabController(
         animationDuration: Duration(seconds: 1),
         length: 2,

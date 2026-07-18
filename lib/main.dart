@@ -7,6 +7,9 @@ import 'package:prayer_times_quran_azkar_app/core/utils/observers/states_observe
 import 'package:prayer_times_quran_azkar_app/app/muslim_app.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ar', null);
@@ -15,6 +18,13 @@ void main() async {
   // تهيئة الإشعارات المحلية عند بدء تشغيل التطبيق
   final notificationService = DependencyInjection.getIt<NotificationService>();
   await notificationService.init();
+  await ForegroundNotificationService.init();
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'تشغيل الصوتيات',
+    androidNotificationOngoing: true,
+  );
+  
   Bloc.observer = StatesObserver();
   await Hive.initFlutter();
   await Hive.openBox('settings_box');

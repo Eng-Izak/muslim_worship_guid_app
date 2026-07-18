@@ -34,6 +34,7 @@ class HomeScreen extends StatelessWidget {
               context.read<PrayerCubit>().fetchPrayerTimes(
                 latitude: state.latitude,
                 longitude: state.longitude,
+                cityName: state.cityName,
               );
 
               // اختياري: إظهار رسالة تأكيد خفيفة للمستخدم بنجاح التحديث
@@ -56,30 +57,71 @@ class HomeScreen extends StatelessWidget {
                   const HomeAppBarWidget(), // ستعمل أيقونة التحديث وتتفاعل 100% الآن
               backgroundColor: ThemingColors.kPrimary,
               body: SafeArea(
-                child: Column(
-                  children: [
-                    SizedBox(height: context.heightPct(.05)),
-                    const TodayTimesUpcomingPrayerCardWidget(),
-                    Expanded(
-                      child: Row(
+                child: context.isLandscape
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // القائمة الجانبية اليسرى
-                          const LiftFeaturesMenuWidget(),
-
-                          // الجزء الأوسط (البطاقات الذهبية والمصحف)
-                          const MedlePublicInformationMenuWidget(),
-
-                          // القائمة الجانبية اليمنى
-                          const RightFeaturesMenuWidget(),
+                          // الجانب الأيمن/الأيسر: بطاقة مواقيت الصلاة القادمة والتاريخ والتذييل في عمود قابل للتمرير
+                          Expanded(
+                            flex: 2,
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Column(
+                                children: [
+                                  const TodayTimesUpcomingPrayerCardWidget(),
+                                  const SizedBox(height: 16),
+                                  const HomeDateWidget(),
+                                  const SizedBox(height: 16),
+                                  const AppDeveloperFooterWidget(),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // فاصل رأسي أنيق ومذهب
+                          VerticalDivider(
+                            color: const Color(0xFFD4AF37).withAlpha(80),
+                            width: 1,
+                            thickness: 1,
+                            indent: 20,
+                            endIndent: 20,
+                          ),
+                          // الجانب الآخر: القوائم الثلاثة للخدمات
+                          Expanded(
+                            flex: 3,
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 650),
+                                child: const Row(
+                                  children: [
+                                    LiftFeaturesMenuWidget(),
+                                    MedlePublicInformationMenuWidget(),
+                                    RightFeaturesMenuWidget(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          SizedBox(height: context.responsiveValue(mobile: 10.0, tablet: 20.0)),
+                          const TodayTimesUpcomingPrayerCardWidget(),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const LiftFeaturesMenuWidget(),
+                                const MedlePublicInformationMenuWidget(),
+                                const RightFeaturesMenuWidget(),
+                              ],
+                            ),
+                          ),
+                          const HomeDateWidget(),
+                          SizedBox(height: context.responsiveValue(mobile: 10.0, tablet: 20.0)),
+                          const AppDeveloperFooterWidget(),
+                          SizedBox(height: context.responsiveValue(mobile: 10.0, tablet: 20.0)),
                         ],
                       ),
-                    ),
-                    const HomeDateWidget(),
-                    SizedBox(height: context.heightPct(.05)),
-                    const AppDeveloperFooterWidget(),
-                    SizedBox(height: context.heightPct(.05)),
-                  ],
-                ),
               ),
             ),
           ),

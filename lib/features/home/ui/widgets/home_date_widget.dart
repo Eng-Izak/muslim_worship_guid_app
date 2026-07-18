@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
@@ -27,105 +27,113 @@ class HomeDateWidget extends StatelessWidget {
     final String hijriMonth = hijeiDate.hMonth.toHijriMonthNameAr;
     final String hijriYear = hijeiDate.hYear.toString();
 
-    return Row(
-      mainAxisAlignment: .spaceEvenly,
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: ThemingColors.kPrimary.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: ThemingColors.kWarning.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+    return Center(
+      heightFactor: 1.0,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 450),
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          alignment: WrapAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: ThemingColors.kPrimary.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: ThemingColors.kWarning.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Column(
-                mainAxisAlignment: .center,
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // التاريخ الميلادي بالعربية
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // التاريخ الميلادي بالعربية
+                      Text(
+                        '$dayNameAr $day $monthNameAr $year م',
+                        style: TextStyle(
+                          color: ThemingColors.kWarning,
+                          fontSize: context.setSp(18),
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Arial',
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      // التاريخ بالإنجليزية
+                      Text(
+                        formattedEn,
+                        textDirection: TextDirection.ltr,
+                        style: TextStyle(
+                          color: ThemingColors.kAccent.withValues(alpha: 0.8),
+                          fontSize: context.setSp(14),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: ThemingColors.kPrimary.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: ThemingColors.kWarning.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // التاريخ الهجري بالعربية
                   Text(
-                    '$dayNameAr $day $monthNameAr $year م',
+                    ' $dayNameAr $hijriDay $hijriMonth $hijriYear هـ',
                     style: TextStyle(
                       color: ThemingColors.kWarning,
-                      fontSize: context.setSp(18),
+                      fontSize: context.setSp(16),
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Arial',
+                      fontFamily: 'Arial', // أو أي خط عربي مناسب
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   // التاريخ بالإنجليزية
                   Text(
-                    formattedEn,
+                    '${hijeiDate.hMonth.toHijriMonthNameEn} ${hijeiDate.hYear} AH',
+                    textDirection: TextDirection.ltr,
                     style: TextStyle(
                       color: ThemingColors.kAccent.withValues(alpha: 0.8),
                       fontSize: context.setSp(14),
-                      fontWeight: .bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: ThemingColors.kPrimary.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: ThemingColors.kWarning.withValues(alpha: 0.5),
-              width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: .center,
-            children: [
-              // التاريخ الهجري بالعربية
-              Text(
-                ' $dayNameAr $hijriDay'
-                ' $hijriMonth $hijriYear هـ',
-                style: TextStyle(
-                  color: ThemingColors.kWarning,
-                  fontSize: context.setSp(16),
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Arial', // أو أي خط عربي مناسب
-                ),
-              ),
-              SizedBox(height: 2),
-              // التاريخ بالإنجليزية
-              Text(
-                '${hijeiDate.hMonth.toHijriMonthNameEn} ${hijeiDate.hYear} AH',
-                style: TextStyle(
-                  color: ThemingColors.kAccent.withValues(alpha: 0.8),
-                  fontSize: context.setSp(14),
-                  fontWeight: .bold,
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

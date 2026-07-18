@@ -18,11 +18,13 @@ class LocationSuccess extends LocationState {
   final double latitude;
   final double longitude;
   final bool isFromCache;
+  final String cityName;
 
   LocationSuccess({
     required this.latitude,
     required this.longitude,
     required this.isFromCache,
+    required this.cityName,
   });
 }
 

@@ -53,6 +53,7 @@ class RadioScreen extends StatelessWidget {
                         context.read<RadioCubit>().toggleRadioPlayback(
                           station.url,
                           station.id,
+                          stationName: station.name,
                         );
                       },
                     );

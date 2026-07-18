@@ -1,15 +1,65 @@
+import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/asset_json_decompressor.dart';
 import 'package:prayer_times_quran_azkar_app/features/radio/data/models/radio_station_model.dart';
 
 part 'radio_state.dart';
 
 class RadioCubit extends Cubit<RadioState> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = DependencyInjection.getIt<AudioPlayer>();
+  StreamSubscription? _playerSubscription;
+  StreamSubscription? _playerStateSubscription;
 
-  RadioCubit() : super(RadioLoadingData());
+  RadioCubit() : super(RadioLoadingData()) {
+    _playerSubscription = _audioPlayer.playbackEventStream.listen((event) {
+      _syncPlayerState();
+    });
+    _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
+      _syncPlayerState();
+    });
+  }
+
+  void _syncPlayerState() {
+    if (isClosed) return;
+    if (state is RadioLoadedData) {
+      final currentState = state as RadioLoadedData;
+
+      final seqState = _audioPlayer.sequenceState;
+
+      final currentSource = seqState.currentSource;
+      if (currentSource == null) {
+        emit(currentState.copyWith(resetPlaying: true));
+        return;
+      }
+
+      final tag = currentSource.tag;
+      if (tag is! MediaItem) {
+        emit(currentState.copyWith(resetPlaying: true));
+        return;
+      }
+
+      final String currentMediaId = tag.id;
+      if (currentMediaId.startsWith('radio_')) {
+        final idStr = currentMediaId.replaceFirst('radio_', '');
+        final stationId = int.tryParse(idStr);
+        final isPlaying = _audioPlayer.playing;
+
+        emit(currentState.copyWith(
+          playingStationId: stationId,
+          isPlaying: isPlaying,
+          isAudioLoading: _audioPlayer.processingState == ProcessingState.buffering ||
+              _audioPlayer.processingState == ProcessingState.loading,
+        ));
+        return;
+      }
+
+      emit(currentState.copyWith(resetPlaying: true));
+    }
+  }
 
   /// تحميل بيانات المحطات من ملف الـ JSON المضغوط (.gz)
   Future<void> loadRadioStations() async {
@@ -25,7 +75,33 @@ class RadioCubit extends Cubit<RadioState> {
       final RadioBookModel book = await compute(_parseRadioProcess, jsonMap);
 
       if (isClosed) return;
-      emit(RadioLoadedData(stations: book.radios));
+
+      final seqState = _audioPlayer.sequenceState;
+      int? playingStationId;
+      bool isPlaying = false;
+      bool isAudioLoading = false;
+
+      final currentSource = seqState.currentSource;
+      if (currentSource != null) {
+        final tag = currentSource.tag;
+        if (tag is MediaItem) {
+          final String currentMediaId = tag.id;
+          if (currentMediaId.startsWith('radio_')) {
+            final idStr = currentMediaId.replaceFirst('radio_', '');
+            playingStationId = int.tryParse(idStr);
+            isPlaying = _audioPlayer.playing;
+            isAudioLoading = _audioPlayer.processingState == ProcessingState.buffering ||
+                _audioPlayer.processingState == ProcessingState.loading;
+          }
+        }
+      }
+
+      emit(RadioLoadedData(
+        stations: book.radios,
+        playingStationId: playingStationId,
+        isPlaying: isPlaying,
+        isAudioLoading: isAudioLoading,
+      ));
     } catch (e) {
       if (isClosed) return;
       emit(RadioErrorData("حدث خطأ أثناء جلب المحطات: ${e.toString()}"));
@@ -33,7 +109,7 @@ class RadioCubit extends Cubit<RadioState> {
   }
 
   /// تشغيل أو إيقاف محطة الراديو حياً
-  Future<void> toggleRadioPlayback(String streamUrl, int stationId) async {
+  Future<void> toggleRadioPlayback(String streamUrl, int stationId, {String stationName = 'إذاعة القرآن الكريم'}) async {
     if (state is RadioLoadedData) {
       final currentState = state as RadioLoadedData;
 
@@ -65,8 +141,19 @@ class RadioCubit extends Cubit<RadioState> {
             ),
           );
 
-          // الشبك على البث المباشر
-          await _audioPlayer.setUrl(streamUrl);
+          // الشبك على البث المباشر مع بيانات الميديا
+          await _audioPlayer.setAudioSource(
+            AudioSource.uri(
+              Uri.parse(streamUrl),
+              tag: MediaItem(
+                id: 'radio_$stationId',
+                album: 'إذاعات القرآن الكريم',
+                title: stationName,
+                artist: 'بث مباشر',
+                artUri: Uri.parse('asset:///assets/images/logo.png'),
+              ),
+            ),
+          );
           await _audioPlayer.play();
 
           if (isClosed) return;
@@ -94,8 +181,8 @@ class RadioCubit extends Cubit<RadioState> {
 
   @override
   Future<void> close() async {
-    await _audioPlayer.stop();
-    await _audioPlayer.dispose();
+    await _playerSubscription?.cancel();
+    await _playerStateSubscription?.cancel();
     return super.close();
   }
 }

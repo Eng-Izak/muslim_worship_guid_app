@@ -1,8 +1,10 @@
 import 'dart:async';
-
+import 'dart:developer' as dev;
 import 'package:bloc/bloc.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'location_state.dart';
 
@@ -12,21 +14,54 @@ class LocationCubit extends Cubit<LocationState> {
   LocationCubit() : super(LocationInitial());
 
   /// فحص الكاش داخل الـ Splash Screen
-  void checkLocationOnSplash() {
+  void checkLocationOnSplash() async {
     // 🔥 خطوة أمان: تصفير الحالة مؤقتاً لضمان التقاط الـ Listener للتغيير عند عمل Hot Restart
     emit(LocationInitial());
 
     final dynamic cachedLat = _settingsBox.get('latitude');
     final dynamic cachedLng = _settingsBox.get('longitude');
+    final dynamic cachedCity = _settingsBox.get('cityName') ?? "موقعي الحالي";
 
     if (cachedLat != null && cachedLng != null) {
       final double lat = double.parse(cachedLat.toString());
       final double lng = double.parse(cachedLng.toString());
 
-      emit(LocationSuccess(latitude: lat, longitude: lng, isFromCache: true));
+      // حفظ في SharedPreferences أيضاً ليكون متاحاً للـ Isolate الخلفي
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('lat', lat);
+      await prefs.setDouble('lng', lng);
+      await prefs.setString('city_name', cachedCity.toString());
+
+      emit(LocationSuccess(
+        latitude: lat,
+        longitude: lng,
+        isFromCache: true,
+        cityName: cachedCity.toString(),
+      ));
     } else {
       emit(LocationRequired());
     }
+  }
+
+  /// حل اسم المدينة جغرافياً بلغة عربية
+  Future<String> _getCityName(double latitude, double longitude) async {
+    try {
+      await setLocaleIdentifier('ar');
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        final placemark = placemarks.first;
+        return placemark.locality ??
+            placemark.subAdministrativeArea ??
+            placemark.administrativeArea ??
+            "موقعي الحالي";
+      }
+    } catch (e) {
+      dev.log("Error resolving address: $e");
+    }
+    return "موقعي الحالي";
   }
 
   /// 1. جلب الموقع أول مرة وحفظه (تستدعى من الـ Splash Screen)
@@ -36,17 +71,27 @@ class LocationCubit extends Cubit<LocationState> {
       // استدعاء الدالة المركزية المشتركة لجلب الموقع الجغرافي حياً
       final Position position = await _determinePosition();
 
-      // حفظ الإحداثيات في الكاش فوراً وتأكيد الحفظ بالـ flush
+      // حل اسم المدينة
+      final String cityName = await _getCityName(position.latitude, position.longitude);
+
+      // حفظ الإحداثيات واسم المدينة في الكاش فوراً وتأكيد الحفظ بالـ flush
       await _settingsBox.put('latitude', position.latitude);
       await _settingsBox.put('longitude', position.longitude);
-      await _settingsBox
-          .flush(); // تأمين البيانات بالهاردوير لمنع الفقد عند الـ Hot Restart
+      await _settingsBox.put('cityName', cityName);
+      await _settingsBox.flush(); // تأمين البيانات بالهاردوير لمنع الفقد عند الـ Hot Restart
+
+      // حفظ في SharedPreferences لـ Isolate الخدمة الخلفية
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('lat', position.latitude);
+      await prefs.setDouble('lng', position.longitude);
+      await prefs.setString('city_name', cityName);
 
       emit(
         LocationSuccess(
           latitude: position.latitude,
           longitude: position.longitude,
           isFromCache: false,
+          cityName: cityName,
         ),
       );
     } on TimeoutException catch (e) {
@@ -61,16 +106,24 @@ class LocationCubit extends Cubit<LocationState> {
     emit(LocationLoading());
     try {
       final Position position = await _determinePosition();
+      final String cityName = await _getCityName(position.latitude, position.longitude);
 
       await _settingsBox.put('latitude', position.latitude);
       await _settingsBox.put('longitude', position.longitude);
+      await _settingsBox.put('cityName', cityName);
       await _settingsBox.flush(); // تأمين البيانات بالهاردوير
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('lat', position.latitude);
+      await prefs.setDouble('lng', position.longitude);
+      await prefs.setString('city_name', cityName);
 
       emit(
         LocationSuccess(
           latitude: position.latitude,
           longitude: position.longitude,
           isFromCache: false,
+          cityName: cityName,
         ),
       );
     } on TimeoutException catch (e) {

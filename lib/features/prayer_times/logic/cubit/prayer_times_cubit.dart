@@ -8,6 +8,7 @@ import 'dart:developer';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/notification_service.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/data/models/prayer_times_model.dart';
 part 'prayer_times_state.dart';
 
@@ -16,6 +17,7 @@ class PrayerCubit extends Cubit<PrayerStates> {
 
   // إحداثيات مرنة ديناميكية يتم تحديثها تلقائياً من الـ LocationCubit
   Coordinates? _currentCoordinates;
+  String _currentCityName = "موقعي الحالي";
 
   final params = CalculationParameters(
     method: CalculationMethod.egyptian,
@@ -28,11 +30,16 @@ class PrayerCubit extends Cubit<PrayerStates> {
   Timer? _countdownTimer;
 
   /// 1. دالة حساب مواقيت اليوم بناءً على الإحداثيات الحية المستلمة
-  void fetchPrayerTimes({required double latitude, required double longitude}) {
+  void fetchPrayerTimes({
+    required double latitude,
+    required double longitude,
+    String cityName = "موقعي الحالي",
+  }) {
     _countdownTimer?.cancel(); // تنظيف العداد القديم قبل البدء
 
     // تحديث الإحداثيات الحالية المعتمدة في الكيوبت
     _currentCoordinates = Coordinates(latitude, longitude);
+    _currentCityName = cityName;
 
     // 🔥 خطوة حماية معمارية: إطلاق حالة تحميل للتصفير وضمان استقبال الـ Pipeline للحسابات بشكل متزامن
     emit(PrayerLoadingState());
@@ -130,6 +137,13 @@ class PrayerCubit extends Cubit<PrayerStates> {
 
       emit(PrayerSuccessState(prayerModel));
       _scheduleDailyPrayers(prayerTimes);
+
+      // تشغيل وتحديث الخدمة الخلفية للإشعار المستمر
+      ForegroundNotificationService.start(
+        latitude: _currentCoordinates!.latitude,
+        longitude: _currentCoordinates!.longitude,
+        cityName: _currentCityName,
+      );
     } catch (e) {
       _countdownTimer?.cancel();
       emit(PrayerErrorState("حدث خطأ أثناء حساب المواقيت: ${e.toString()}"));
@@ -243,6 +257,7 @@ class PrayerCubit extends Cubit<PrayerStates> {
           title: 'حان الآن موعد صلاة $name',
           body: 'الله أكبر، الله أكبر... حان الآن وقت صلاة $name حسب توقيتك المحلي.',
           scheduledTime: time,
+          payload: 'adhan_alarm|$name|${DateFormat.jm().format(time.toLocal())}',
         );
       });
     } catch (e) {

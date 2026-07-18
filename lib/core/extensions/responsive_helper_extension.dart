@@ -24,4 +24,17 @@ extension ResponsiveHelperExtension on BuildContext {
   // 5. اختصارات ذكية لمعرفة نوع الجهاز الحالي (تفيد في تغيير التصميم بالكامل للتابلت)
   bool get isMobile => screenWidth < 600;
   bool get isTablet => screenWidth >= 600 && screenWidth < 1024;
+  bool get isLandscape => MediaQuery.of(this).orientation == Orientation.landscape;
+
+  // 6. اختيار القيمة المناسبة بناءً على حجم واتجاه الشاشة
+  T responsiveValue<T>({
+    required T mobile,
+    T? tablet,
+    T? landscape,
+  }) {
+    if (isLandscape && landscape != null) return landscape;
+    if (isTablet && tablet != null) return tablet;
+    return mobile;
+  }
 }
+

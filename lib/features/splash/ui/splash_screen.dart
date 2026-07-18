@@ -51,6 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 context.read<PrayerCubit>().fetchPrayerTimes(
                   latitude: state.latitude,
                   longitude: state.longitude,
+                  cityName: state.cityName,
                 );
               }
             },

@@ -10,6 +10,8 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double iconSize = context.responsiveValue(mobile: 28.0, tablet: 32.0, landscape: 28.0);
+
     return AppBar(
       centerTitle: true,
       backgroundColor: ThemingColors.kPrimary,
@@ -19,7 +21,7 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         icon: Icon(
           Icons.settings_rounded,
           color: ThemingColors.kAccent,
-          size: context.widthPct(0.08),
+          size: iconSize,
         ),
       ),
       title: Text(
@@ -35,14 +37,14 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         BlocBuilder<LocationCubit, LocationState>(
           builder: (context, state) {
             if (state is LocationLoading) {
-              return Padding(
+              return const Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: context.heightPct(0.01),
+                  horizontal: 12.0,
                 ),
                 child: Center(
                   child: SizedBox(
-                    width: context.widthPct(0.06),
-                    height: context.heightPct(0.06),
+                    width: 24,
+                    height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
                       color: ThemingColors
@@ -58,7 +60,7 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
               icon: Icon(
                 Icons.location_on_outlined,
                 color: ThemingColors.kBorderAccent,
-                size: context.widthPct(0.08),
+                size: iconSize,
               ),
               tooltip: 'تحديث الموقع الجغرافي الحالي',
               onPressed: () {

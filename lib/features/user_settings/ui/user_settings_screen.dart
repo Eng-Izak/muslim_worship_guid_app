@@ -6,6 +6,8 @@ import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/t
 
 import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
 
+import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/adhan_voice_selector_card.dart';
+
 class UserSettingsScreen extends StatelessWidget {
   const UserSettingsScreen({super.key});
 
@@ -44,6 +46,11 @@ class UserSettingsScreen extends StatelessWidget {
 
               // قسم اختيار لغة التطبيق وتخصيص الخطوط وحجمها بالكامل
               TypographySelectorCard(),
+
+              SizedBox(height: 12),
+
+              // قسم اختيار صوت الأذان
+              AdhanVoiceSelectorCard(),
 
               SizedBox(height: 30),
             ],
