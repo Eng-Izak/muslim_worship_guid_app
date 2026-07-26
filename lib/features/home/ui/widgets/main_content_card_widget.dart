@@ -32,9 +32,9 @@ class MainContentCardWidget extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: ThemingColors.kAccent.withAlpha(
-                  25,
-                ), // 0.3 * 255 and 0.1 * 255
+                color: ThemingColors.kAccent(
+                  context,
+                ).withAlpha(25), // 0.3 * 255 and 0.1 * 255
                 blurRadius: 12,
                 spreadRadius: 2,
               ),
@@ -48,7 +48,7 @@ class MainContentCardWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: context.setSp(15),
-                    color: ThemingColors.kAccentLight.withAlpha(200),
+                    color: ThemingColors.kAccentLight(context).withAlpha(200),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -61,7 +61,7 @@ class MainContentCardWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: context.setSp(16),
-                    color: ThemingColors.kTextMain,
+                    color: ThemingColors.kTextMain(context),
                     fontWeight: FontWeight.bold,
                     height: 1.5,
                   ),
@@ -76,7 +76,7 @@ class MainContentCardWidget extends StatelessWidget {
           title,
           style: TextStyle(
             fontSize: context.setSp(12),
-            color: ThemingColors.kTextMain,
+            color: ThemingColors.kTextMain(context),
             fontWeight: FontWeight.w500,
           ),
         ),

@@ -13,28 +13,37 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
     return BlocBuilder<PrayerCubit, PrayerStates>(
       builder: (context, state) {
         if (state is PrayerLoadingState) {
-          return Center(
-            child: CircularProgressIndicator(color: Colors.green),
-          );
+          return Center(child: CircularProgressIndicator(color: Colors.green));
         } else if (state is PrayerSuccessState) {
           return Center(
             child: Container(
               width: double.infinity,
               constraints: const BoxConstraints(maxWidth: 450),
               padding: EdgeInsets.symmetric(
-                horizontal: context.responsiveValue(mobile: 16.0, tablet: 24.0, landscape: 16.0),
-                vertical: context.responsiveValue(mobile: 16.0, tablet: 20.0, landscape: 12.0),
+                horizontal: context.responsiveValue(
+                  mobile: 16.0,
+                  tablet: 24.0,
+                  landscape: 16.0,
+                ),
+                vertical: context.responsiveValue(
+                  mobile: 16.0,
+                  tablet: 20.0,
+                  landscape: 12.0,
+                ),
               ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [ThemingColors.kPrimary, ThemingColors.kPrimaryDark],
+                  colors: [
+                    ThemingColors.kPrimary(context),
+                    ThemingColors.kPrimaryDark(context),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: ThemingColors.kPrimaryDark.withAlpha(25),
+                    color: ThemingColors.kPrimaryDark(context).withAlpha(25),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -63,7 +72,7 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-  
+
                   // 🔥 تحديث العداد التنازلي محلياً في الواجهة كل ثانية دون استدعاء Bloc
                   StreamBuilder(
                     stream: Stream.periodic(const Duration(seconds: 1)),
@@ -71,40 +80,54 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                       final now = DateTime.now();
                       final nextObj = state.prayerTimes.nextPrayerTimeObj;
                       final currentObj = state.prayerTimes.currentPrayerTimeObj;
-                      
+
                       String localRemaining = "00:00:00";
                       double localProgress = 0.0;
-                      
+
                       if (nextObj != null) {
                         final difference = nextObj.difference(now);
                         if (!difference.isNegative) {
-                          final hours = difference.inHours.toString().padLeft(2, '0');
-                          final minutes = (difference.inMinutes % 60).toString().padLeft(2, '0');
-                          final seconds = (difference.inSeconds % 60).toString().padLeft(2, '0');
+                          final hours = difference.inHours.toString().padLeft(
+                            2,
+                            '0',
+                          );
+                          final minutes = (difference.inMinutes % 60)
+                              .toString()
+                              .padLeft(2, '0');
+                          final seconds = (difference.inSeconds % 60)
+                              .toString()
+                              .padLeft(2, '0');
                           localRemaining = "$hours:$minutes:$seconds";
-                          
+
                           if (currentObj != null) {
-                            final totalDuration = nextObj.difference(currentObj).inSeconds;
-                            final elapsedDuration = now.difference(currentObj).inSeconds;
+                            final totalDuration = nextObj
+                                .difference(currentObj)
+                                .inSeconds;
+                            final elapsedDuration = now
+                                .difference(currentObj)
+                                .inSeconds;
                             if (totalDuration > 0) {
-                              localProgress = (elapsedDuration / totalDuration).clamp(0.0, 1.0);
+                              localProgress = (elapsedDuration / totalDuration)
+                                  .clamp(0.0, 1.0);
                             }
                           }
                         } else {
                           // إذا انتهى الوقت، نستدعي الكيوبت لتحديث المواقيت
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                 final locState = context.read<LocationCubit>().state;
-                                 if (locState is LocationSuccess) {
-                                   context.read<PrayerCubit>().fetchPrayerTimes(
-                                     latitude: locState.latitude,
-                                     longitude: locState.longitude,
-                                     cityName: locState.cityName,
-                                   );
-                                 }
-                              });
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            final locState = context
+                                .read<LocationCubit>()
+                                .state;
+                            if (locState is LocationSuccess) {
+                              context.read<PrayerCubit>().fetchPrayerTimes(
+                                latitude: locState.latitude,
+                                longitude: locState.longitude,
+                                cityName: locState.cityName,
+                              );
+                            }
+                          });
                         }
                       }
-  
+
                       return Column(
                         children: [
                           SizedBox(height: 12),
@@ -134,12 +157,14 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                           LinearProgressIndicator(
                             value: localProgress,
                             backgroundColor: Colors.white12,
-                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFFD4AF37),
+                            ),
                             minHeight: 3,
                           ),
                         ],
                       );
-                    }
+                    },
                   ),
                 ],
               ),
@@ -154,7 +179,10 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                 SizedBox(height: 10),
                 Text(
                   state.errorMessage,
-                  style: TextStyle(color: Colors.red, fontSize: context.setSp(16)),
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: context.setSp(16),
+                  ),
                 ),
               ],
             ),

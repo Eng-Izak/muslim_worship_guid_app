@@ -18,27 +18,28 @@ class HadisScreen extends StatelessWidget {
         Opacity(
           opacity: 0.8,
           child: Scaffold(
-            backgroundColor:
-                ThemingColors.kPrimary, // تدرج زيتوني أعمق لراحة العين
+            backgroundColor: ThemingColors.kPrimary(
+              context,
+            ), // تدرج زيتوني أعمق لراحة العين
             appBar: AppBar(
-              backgroundColor: ThemingColors.kPrimary,
+              backgroundColor: ThemingColors.kPrimary(context),
               elevation: 0,
               title: Text(
                 "الأحاديث النبوية",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: ThemingColors.kAccent,
+                  color: ThemingColors.kAccent(context),
                 ),
               ),
               centerTitle: true,
-              iconTheme: const IconThemeData(color: ThemingColors.kAccent),
+              iconTheme: IconThemeData(color: ThemingColors.kAccent(context)),
             ),
             body: BlocBuilder<HadithCubit, HadithState>(
               builder: (context, state) {
                 if (state is HadithLoading) {
                   return Center(
                     child: CircularProgressIndicator(
-                      color: ThemingColors.kAccent,
+                      color: ThemingColors.kAccent(context),
                     ),
                   );
                 } else if (state is HadithLoaded) {
@@ -47,9 +48,7 @@ class HadisScreen extends StatelessWidget {
                   return Center(
                     child: Text(
                       state.errorMessage,
-                      style: TextStyle(
-                        color: ThemingColors.kError,
-                      ),
+                      style: TextStyle(color: ThemingColors.kError),
                     ),
                   );
                 }

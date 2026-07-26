@@ -28,7 +28,7 @@ class SurahDetailsScreenTapTwoWidget extends StatelessWidget {
           final reciter = surah.recitersAudio[index];
 
           return Card(
-            color: ThemingColors.kPrimary,
+            color: ThemingColors.kPrimary(context),
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: ListTile(
               title: Text(

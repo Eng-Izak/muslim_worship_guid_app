@@ -36,7 +36,7 @@ class SurahDetailsScreenTapOneWidget extends StatelessWidget {
                     child: Text(
                       "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
                       style: TextStyle(
-                        color: ThemingColors.kTextMain,
+                        color: ThemingColors.kTextMain(context),
                         fontSize: context.setSp(26),
                         fontWeight: FontWeight.bold,
                       ),
@@ -63,7 +63,7 @@ class SurahDetailsScreenTapOneWidget extends StatelessWidget {
                         text: "$cleanText ",
                         style: TextStyle(
                           fontSize: context.setSp(26),
-                          color: ThemingColors.kTextMain,
+                          color: ThemingColors.kTextMain(context),
                           height: 2.2,
                           fontWeight: FontWeight.w700,
                         ),

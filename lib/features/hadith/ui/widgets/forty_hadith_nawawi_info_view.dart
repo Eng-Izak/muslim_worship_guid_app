@@ -34,11 +34,11 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: ThemingColors.kPrimary,
+                color: ThemingColors.kPrimary(context),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: ThemingColors.kPrimaryDark,
+                    color: ThemingColors.kPrimaryDark(context),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
@@ -55,7 +55,7 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                         horizontal: 16,
                         vertical: 10,
                       ),
-                      color: ThemingColors.kPrimary,
+                      color: ThemingColors.kPrimary(context),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -65,7 +65,7 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: ThemingColors.kAccent,
+                              color: ThemingColors.kAccent(context),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -73,14 +73,18 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                               style: TextStyle(
                                 fontSize: context.setSp(12),
                                 fontWeight: FontWeight.bold,
-                                color: ThemingColors.kScaffoldBackground,
+                                color: ThemingColors.kScaffoldBackground(
+                                  context,
+                                ),
                               ),
                             ),
                           ),
                           // زر تبديل اللغة الاحترافي بالتطبيق
                           TextButton.icon(
                             style: TextButton.styleFrom(
-                              foregroundColor: ThemingColors.kTextAccent,
+                              foregroundColor: ThemingColors.kTextAccent(
+                                context,
+                              ),
                             ),
                             onPressed: () {
                               setState(() {
@@ -112,7 +116,7 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                                 key: ValueKey("en_${hadith.id}"),
                                 style: TextStyle(
                                   fontSize: context.setSp(20),
-                                  color: ThemingColors.kTextMain,
+                                  color: ThemingColors.kTextMain(context),
                                   height: 2,
                                 ),
                               )
@@ -121,10 +125,11 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                                 key: ValueKey("ar_${hadith.id}"),
                                 textAlign: TextAlign.center,
                                 textDirection: TextDirection.rtl,
-                                style: TextStyle( // يفضل توفير خط عثماني أو كايرو عريض
+                                style: TextStyle(
+                                  // يفضل توفير خط عثماني أو كايرو عريض
                                   fontSize: context.setSp(20),
                                   fontWeight: FontWeight.w800,
-                                  color: ThemingColors.kTextMain,
+                                  color: ThemingColors.kTextMain(context),
                                   height: 2,
                                 ),
                               ),

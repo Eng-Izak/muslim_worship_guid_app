@@ -31,26 +31,28 @@ class QiblaScreen extends StatelessWidget {
         children: [
           const BackgroundImageWidget(),
           Scaffold(
-            backgroundColor: ThemingColors.kPrimary.withAlpha(220),
+            backgroundColor: ThemingColors.kPrimary(context).withAlpha(220),
             appBar: AppBar(
-              backgroundColor: ThemingColors.kPrimary.withAlpha(220),
+              backgroundColor: ThemingColors.kPrimary(context).withAlpha(220),
               elevation: 0,
               title: Text(
                 "اتجاه القبلة",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: ThemingColors.kIconColor,
+                  color: ThemingColors.kIconColor(context),
                 ),
               ),
               centerTitle: true,
-              iconTheme: const IconThemeData(color: ThemingColors.kIconColor),
+              iconTheme: IconThemeData(
+                color: ThemingColors.kIconColor(context),
+              ),
             ),
             body: BlocBuilder<QiblaCubit, QiblaState>(
               builder: (context, state) {
                 if (state is QiblaLoading) {
                   return Center(
                     child: CircularProgressIndicator(
-                      color: ThemingColors.kIconColor,
+                      color: ThemingColors.kIconColor(context),
                     ),
                   );
                 } else if (state is QiblaSuccess) {
@@ -68,19 +70,21 @@ class QiblaScreen extends StatelessWidget {
                         margin: const EdgeInsets.all(24),
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: ThemingColors.kPrimary.withAlpha(220),
+                          color: ThemingColors.kPrimary(context).withAlpha(220),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: ThemingColors.kIconColor.withAlpha(120),
+                            color: ThemingColors.kIconColor(
+                              context,
+                            ).withAlpha(120),
                             width: 1.5,
                           ),
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.screen_rotation_alt, // استخدم أيقونة موجودة
-                              color: ThemingColors.kIconColor,
+                              color: ThemingColors.kIconColor(context),
                               size: 64,
                             ),
                             SizedBox(height: 16),
@@ -89,7 +93,7 @@ class QiblaScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: context.setSp(18),
                                 fontWeight: FontWeight.bold,
-                                color: ThemingColors.kIconColor,
+                                color: ThemingColors.kIconColor(context),
                               ),
                             ),
                             SizedBox(height: 12),
@@ -98,7 +102,7 @@ class QiblaScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: context.setSp(14),
-                                color: ThemingColors.kTextMain,
+                                color: ThemingColors.kTextMain(context),
                                 height: 1.6,
                               ),
                             ),
@@ -111,9 +115,7 @@ class QiblaScreen extends StatelessWidget {
                   return Center(
                     child: Text(
                       state.errorMessage,
-                      style: TextStyle(
-                        color: ThemingColors.kError,
-                      ),
+                      style: TextStyle(color: ThemingColors.kError),
                     ),
                   );
                 }
@@ -121,9 +123,7 @@ class QiblaScreen extends StatelessWidget {
                 return Center(
                   child: Text(
                     "برجاء التأكد من تفعيل صلاحيات الموقع لحساب القبلة",
-                    style: TextStyle(
-                      color: ThemingColors.kTextMain,
-                    ),
+                    style: TextStyle(color: ThemingColors.kTextMain(context)),
                   ),
                 );
               },

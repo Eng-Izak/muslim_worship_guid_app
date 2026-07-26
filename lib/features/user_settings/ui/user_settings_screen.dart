@@ -4,6 +4,7 @@ import 'package:prayer_times_quran_azkar_app/core/shared/widgets/background_imag
 import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/theme_selector_card.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/typography_selector_card.dart';
 
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
 
 import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/adhan_voice_selector_card.dart';
@@ -18,22 +19,26 @@ class UserSettingsScreen extends StatelessWidget {
         // 1. صورة الخلفية الفاخرة للمسجد المتناسقة مع هوية التطبيق البصرية
         const BackgroundImageWidget(),
         Scaffold(
-          backgroundColor: const Color(
-            0xFF1C4537,
+          backgroundColor: ThemingColors.kScaffoldBackground(
+            context,
           ).withAlpha(220), // شفافية متناغمة فوق الخلفية
           appBar: AppBar(
-            backgroundColor: const Color(0xFF215443),
+            backgroundColor: ThemingColors.kPrimary(context),
             elevation: 0,
             title: Text(
-              Localization.tr(context, ar: 'الإعدادات والتخصيص', en: 'Settings & Customization'),
+              Localization.tr(
+                context,
+                ar: 'الإعدادات والتخصيص',
+                en: 'Settings & Customization',
+              ),
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFC5A85A),
+                color: ThemingColors.kAccent(context),
               ),
             ),
             centerTitle: true,
-            iconTheme: const IconThemeData(color: Color(0xFFC5A85A)),
+            iconTheme: IconThemeData(color: ThemingColors.kAccent(context)),
           ),
           body: ListView(
             physics: const BouncingScrollPhysics(),

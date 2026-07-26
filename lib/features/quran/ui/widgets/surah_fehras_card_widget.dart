@@ -12,7 +12,7 @@ class SurahFehrasCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: ThemingColors.kAccent.withValues(alpha: 0.7),
+      color: ThemingColors.kAccent(context).withValues(alpha: 0.7),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       elevation: 1.5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -23,7 +23,7 @@ class SurahFehrasCardWidget extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: ThemingColors.kPrimary.withAlpha(100),
+            color: ThemingColors.kPrimary(context).withAlpha(100),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -32,12 +32,12 @@ class SurahFehrasCardWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: context.setSp(16),
               fontWeight: FontWeight.bold,
-              color: ThemingColors.kTextMain,
+              color: ThemingColors.kTextMain(context),
             ),
           ),
         ),
         title: Row(
-          mainAxisAlignment: .spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Column(
               children: [
@@ -54,7 +54,7 @@ class SurahFehrasCardWidget extends StatelessWidget {
                     Text(
                       surah.revelationType,
                       style: TextStyle(
-                        color: ThemingColors.kPrimaryDark,
+                        color: ThemingColors.kPrimaryDark(context),
                         fontSize: context.setSp(14),
                       ),
                     ),
@@ -66,13 +66,13 @@ class SurahFehrasCardWidget extends StatelessWidget {
                     Icon(
                       Icons.menu_book_rounded,
                       size: 15,
-                      color: ThemingColors.kPrimary,
+                      color: ThemingColors.kPrimary(context),
                     ),
                     SizedBox(width: 4),
                     Text(
                       ' آيات ${surah.ayahsNumber} ',
                       style: TextStyle(
-                        color: ThemingColors.kPrimaryDark,
+                        color: ThemingColors.kPrimaryDark(context),
                         fontSize: context.setSp(12),
                       ),
                     ),
@@ -86,7 +86,7 @@ class SurahFehrasCardWidget extends StatelessWidget {
                 Text(
                   surah.name,
                   style: TextStyle(
-                    color: ThemingColors.kPrimaryDark,
+                    color: ThemingColors.kPrimaryDark(context),
                     fontWeight: FontWeight.bold,
                     fontSize: context.setSp(17),
                   ),
@@ -96,7 +96,7 @@ class SurahFehrasCardWidget extends StatelessWidget {
                   surah.englishName,
                   style: TextStyle(
                     fontSize: context.setSp(13),
-                    color: ThemingColors.kPrimaryDark.withAlpha(200),
+                    color: ThemingColors.kPrimaryDark(context).withAlpha(200),
                   ),
                 ),
               ],

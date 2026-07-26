@@ -38,12 +38,12 @@ class SurahInfoCardWidget extends StatelessWidget {
         collapsedShape: const Border(),
         leading: Icon(
           Icons.info_outline_rounded,
-          color: ThemingColors.kClockBody,
+          color: ThemingColors.kClockBody(context),
         ),
         title: Text(
           'عن السورة وفضائلها ومقاصدها',
           style: TextStyle(
-            color: ThemingColors.kTextMain,
+            color: ThemingColors.kTextMain(context),
             fontWeight: FontWeight.bold,
             fontSize: context.setSp(18),
           ),
@@ -62,7 +62,7 @@ class SurahInfoCardWidget extends StatelessWidget {
                     fontSize: context.setSp(22),
                     fontWeight: .bold,
                     height: 2,
-                    color: ThemingColors.kTextMain,
+                    color: ThemingColors.kTextMain(context),
                   ),
                   textAlign: TextAlign.center,
                 ),

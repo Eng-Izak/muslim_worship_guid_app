@@ -17,7 +17,9 @@ class SurahDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => SurahDetailsCubit()..loadSurahAyahs(surah.number, surahName: surah.name),
+      create: (context) =>
+          SurahDetailsCubit()
+            ..loadSurahAyahs(surah.number, surahName: surah.name),
       child: DefaultTabController(
         animationDuration: Duration(seconds: 1),
         length: 2,
@@ -28,18 +30,22 @@ class SurahDetailsScreen extends StatelessWidget {
             Opacity(
               opacity: 0.7,
               child: Scaffold(
-                backgroundColor: ThemingColors.kPrimaryDark.withAlpha(200),
+                backgroundColor: ThemingColors.kPrimaryDark(
+                  context,
+                ).withAlpha(200),
                 appBar: AppBar(
                   leading: IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: Icon(Icons.arrow_back_ios_new),
-                    color: ThemingColors.kTextMain,
+                    color: ThemingColors.kTextMain(context),
                   ),
-                  backgroundColor: ThemingColors.kPrimaryDark.withAlpha(200),
+                  backgroundColor: ThemingColors.kPrimaryDark(
+                    context,
+                  ).withAlpha(200),
                   title: Text(
                     surah.name,
                     style: TextStyle(
-                      color: ThemingColors.kTextMain,
+                      color: ThemingColors.kTextMain(context),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -55,7 +61,7 @@ class SurahDetailsScreen extends StatelessWidget {
                         child: Text(
                           "قراءة السورة",
                           style: TextStyle(
-                            color: ThemingColors.kClockBody,
+                            color: ThemingColors.kClockBody(context),
                             fontSize: context.setSp(18),
                             fontWeight: .bold,
                           ),
@@ -69,7 +75,7 @@ class SurahDetailsScreen extends StatelessWidget {
                         child: Text(
                           "الاستماع والتفاصيل",
                           style: TextStyle(
-                            color: ThemingColors.kClockBody,
+                            color: ThemingColors.kClockBody(context),
                             fontSize: context.setSp(18),
                             fontWeight: .bold,
                           ),
@@ -105,9 +111,7 @@ class SurahDetailsScreen extends StatelessWidget {
                       return Center(
                         child: Text(
                           state.errorMessage,
-                          style: TextStyle(
-                            color: ThemingColors.kError,
-                          ),
+                          style: TextStyle(color: ThemingColors.kError),
                         ),
                       );
                     }

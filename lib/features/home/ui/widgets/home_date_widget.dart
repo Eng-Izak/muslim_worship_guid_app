@@ -39,7 +39,7 @@ class HomeDateWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: ThemingColors.kPrimary.withValues(alpha: 0.7),
+                color: ThemingColors.kPrimary(context).withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: ThemingColors.kWarning.withValues(alpha: 0.5),
@@ -76,7 +76,9 @@ class HomeDateWidget extends StatelessWidget {
                         formattedEn,
                         textDirection: TextDirection.ltr,
                         style: TextStyle(
-                          color: ThemingColors.kAccent.withValues(alpha: 0.8),
+                          color: ThemingColors.kAccent(
+                            context,
+                          ).withValues(alpha: 0.8),
                           fontSize: context.setSp(14),
                           fontWeight: FontWeight.bold,
                         ),
@@ -89,7 +91,7 @@ class HomeDateWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: ThemingColors.kPrimary.withValues(alpha: 0.7),
+                color: ThemingColors.kPrimary(context).withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: ThemingColors.kWarning.withValues(alpha: 0.5),
@@ -123,7 +125,9 @@ class HomeDateWidget extends StatelessWidget {
                     '${hijeiDate.hMonth.toHijriMonthNameEn} ${hijeiDate.hYear} AH',
                     textDirection: TextDirection.ltr,
                     style: TextStyle(
-                      color: ThemingColors.kAccent.withValues(alpha: 0.8),
+                      color: ThemingColors.kAccent(
+                        context,
+                      ).withValues(alpha: 0.8),
                       fontSize: context.setSp(14),
                       fontWeight: FontWeight.bold,
                     ),

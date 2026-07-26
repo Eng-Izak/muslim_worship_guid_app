@@ -10,24 +10,28 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double iconSize = context.responsiveValue(mobile: 28.0, tablet: 32.0, landscape: 28.0);
+    final double iconSize = context.responsiveValue(
+      mobile: 28.0,
+      tablet: 32.0,
+      landscape: 28.0,
+    );
 
     return AppBar(
       centerTitle: true,
-      backgroundColor: ThemingColors.kPrimary,
+      backgroundColor: ThemingColors.kPrimary(context),
       leading: IconButton(
         onPressed: () =>
             Navigator.pushNamed(context, RoutingNames.userSettings.route),
         icon: Icon(
           Icons.settings_rounded,
-          color: ThemingColors.kAccent,
+          color: ThemingColors.kAccent(context),
           size: iconSize,
         ),
       ),
       title: Text(
         "دليل عبادات المسلم",
         style: TextStyle(
-          color: ThemingColors.kTextMain,
+          color: ThemingColors.kTextMain(context),
           fontWeight: FontWeight.bold,
           fontSize: context.setSp(20),
         ),
@@ -37,18 +41,17 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         BlocBuilder<LocationCubit, LocationState>(
           builder: (context, state) {
             if (state is LocationLoading) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
                 child: Center(
                   child: SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: ThemingColors
-                          .kAccent, // استخدام لون التمييز الذهبي أثناء التحميل
+                      color: ThemingColors.kAccent(
+                        context,
+                      ), // استخدام لون التمييز الذهبي أثناء التحميل
                     ),
                   ),
                 ),
@@ -59,7 +62,7 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             return IconButton(
               icon: Icon(
                 Icons.location_on_outlined,
-                color: ThemingColors.kBorderAccent,
+                color: ThemingColors.kBorderAccent(context),
                 size: iconSize,
               ),
               tooltip: 'تحديث الموقع الجغرافي الحالي',

@@ -55,7 +55,7 @@ class HomeScreen extends StatelessWidget {
             child: Scaffold(
               appBar:
                   const HomeAppBarWidget(), // ستعمل أيقونة التحديث وتتفاعل 100% الآن
-              backgroundColor: ThemingColors.kPrimary,
+              backgroundColor: ThemingColors.kPrimary(context),
               body: SafeArea(
                 child: context.isLandscape
                     ? Row(
@@ -65,7 +65,10 @@ class HomeScreen extends StatelessWidget {
                           Expanded(
                             flex: 2,
                             child: SingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               child: Column(
                                 children: [
                                   const TodayTimesUpcomingPrayerCardWidget(),
@@ -90,7 +93,9 @@ class HomeScreen extends StatelessWidget {
                             flex: 3,
                             child: Center(
                               child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 650),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 650,
+                                ),
                                 child: const Row(
                                   children: [
                                     LiftFeaturesMenuWidget(),
@@ -105,7 +110,12 @@ class HomeScreen extends StatelessWidget {
                       )
                     : Column(
                         children: [
-                          SizedBox(height: context.responsiveValue(mobile: 10.0, tablet: 20.0)),
+                          SizedBox(
+                            height: context.responsiveValue(
+                              mobile: 10.0,
+                              tablet: 20.0,
+                            ),
+                          ),
                           const TodayTimesUpcomingPrayerCardWidget(),
                           Expanded(
                             child: Row(
@@ -117,9 +127,19 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                           const HomeDateWidget(),
-                          SizedBox(height: context.responsiveValue(mobile: 10.0, tablet: 20.0)),
+                          SizedBox(
+                            height: context.responsiveValue(
+                              mobile: 10.0,
+                              tablet: 20.0,
+                            ),
+                          ),
                           const AppDeveloperFooterWidget(),
-                          SizedBox(height: context.responsiveValue(mobile: 10.0, tablet: 20.0)),
+                          SizedBox(
+                            height: context.responsiveValue(
+                              mobile: 10.0,
+                              tablet: 20.0,
+                            ),
+                          ),
                         ],
                       ),
               ),

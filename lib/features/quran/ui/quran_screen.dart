@@ -21,9 +21,9 @@ class QuranScreen extends StatelessWidget {
           Opacity(
             opacity: 0.7,
             child: Scaffold(
-              backgroundColor: ThemingColors.kPrimary,
+              backgroundColor: ThemingColors.kPrimary(context),
               appBar: AppBar(
-                backgroundColor: ThemingColors.kPrimary,
+                backgroundColor: ThemingColors.kPrimary(context),
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(

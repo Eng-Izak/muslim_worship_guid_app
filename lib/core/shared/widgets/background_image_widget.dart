@@ -7,7 +7,7 @@ class BackgroundImageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: ThemingColors.kPrimary, // لون خلفية احتياطي داكن
+      color: ThemingColors.kPrimary(context), // لون خلفية احتياطي داكن
       width: double.infinity,
       height: double.infinity,
       child: Opacity(
@@ -19,7 +19,7 @@ class BackgroundImageWidget extends StatelessWidget {
           errorBuilder: (context, error, stackTrace) {
             // حالة احتياطية في حال لم تضف الصورة بعد لتجنب الشاشة الحمراء
             return Container(
-              color: ThemingColors.kScaffoldBackground,
+              color: ThemingColors.kScaffoldBackground(context),
               child: const Center(
                 child: Text(
                   'ضع صورة الخلفية في الـ Assets\nأو استخدم Image.network',
