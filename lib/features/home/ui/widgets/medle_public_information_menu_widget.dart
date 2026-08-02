@@ -11,21 +11,22 @@ class MedlePublicInformationMenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double clockSize = (context.screenWidth * 0.12).clamp(75.0, 135.0);
+    // حساب حجم الساعة بمرونة بحيث تناسب الشاشة دون أي تداخل مع كارت الحديث
+    final double clockSize = (context.screenWidth * 0.22).clamp(85.0, 130.0);
 
     return Expanded(
       flex: 2,
       child: Column(
         children: [
-          SizedBox(height: context.responsiveValue(mobile: 10.0, tablet: 20.0)),
           Expanded(
             child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: context.responsiveValue(mobile: 8.0, tablet: 16.0)),
+                  const SizedBox(height: 8),
                   AnalogClockWidget(size: clockSize),
-                  SizedBox(height: context.responsiveValue(mobile: 12.0, tablet: 24.0)),
+                  const SizedBox(height: 14),
                   MainContentCardWidget(
                     title: 'Snippet',
                     headerText: Localization.tr(
@@ -36,7 +37,7 @@ class MedlePublicInformationMenuWidget extends StatelessWidget {
                     arabicText:
                         'مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ',
                   ),
-                  SizedBox(height: context.responsiveValue(mobile: 8.0, tablet: 16.0)),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),

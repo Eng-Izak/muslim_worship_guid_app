@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class ClockPainter extends CustomPainter {
@@ -14,79 +13,54 @@ class ClockPainter extends CustomPainter {
     final Offset center = Offset(centerX, centerY);
     final double radius = min(centerX, centerY);
 
-    // [1] رسم القوس الأزرق الخارجي الموجود بأسفل اليسار في الصورة
+    // [1] رسم القوس الذهبي المحيط بالساعة
     final Paint strokePaint = Paint()
-      ..color = Colors.yellow
+      ..color = const Color(0xFFD4AF37)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 3.5;
+      ..strokeWidth = (radius * 0.04).clamp(1.5, 3.5);
 
-    // // رسم القوس الخلفي الباهت
-    // final Paint backgroundArcPaint = Paint()
-    //   ..color = const Color(0xFF299cdb).withAlpha((255 * 0.15).toInt())
-    //   ..style = PaintingStyle.stroke
-    //   ..strokeWidth = 3.5;
-
-    // canvas.drawArc(
-    //   Rect.fromCircle(center: center, radius: radius - 5),
-    //   35 * pi / 180,
-    //   120 * pi / 180,
-    //   false,
-    //   backgroundArcPaint,
-    // );
-
-    // القوس الأزرق الرئيسي الداكن الحاد
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius - 5),
-      150 * pi / 180,
-      360 * pi / 180,
+      Rect.fromCircle(center: center, radius: radius - 3),
+      0,
+      2 * pi,
       false,
       strokePaint,
     );
 
-    // [2] رسم الدائرة الداخلية البيضاء المرتفعة (الظل الداخلي الخفيف)
-    final Paint innerCirclePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    canvas.drawCircle(center, radius * 0.5, innerCirclePaint);
-
-    // [3] حساب زوايا العقارب الثلاثة بدقة تامة
+    // [2] حساب زوايا العقارب الثلاثة بدقة تامة
     final double secondsAngle = (dateTime.second * 6) * pi / 180;
     final double minutesAngle =
         ((dateTime.minute * 6) + (dateTime.second * 0.1)) * pi / 180;
     final double hoursAngle =
         ((dateTime.hour % 12 * 30) + (dateTime.minute * 0.5)) * pi / 180;
 
-    // [4] إعدادات الرسم الخاصة بكل عقرب (اللون، السمك، الانحناء)
+    // [3] إعدادات رسم العقارب بخطوط مذهبة وزيتونية فاخرة متناسقة
     final Paint hourPaint = Paint()
-      ..color = const Color(0xFF2D5A4A)
+      ..color = const Color(0xFFF7E7CE)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 5.5;
+      ..strokeWidth = (radius * 0.06).clamp(2.5, 4.5);
 
     final Paint minutePaint = Paint()
-      ..color =
-          const Color(0xFF2D5A4A) // لون رمادي داكن يطابق الصورة
+      ..color = const Color(0xFFD4AF37)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 4.0;
+      ..strokeWidth = (radius * 0.045).clamp(1.8, 3.5);
 
     final Paint secondPaint = Paint()
-      ..color = Colors
-          .yellow
-          .shade700 // الأزرق السماوي المميز للعقرب الطويل
+      ..color = const Color(0xFFE53935) // أحمر ياقوتي رفيع لعقرب الثواني
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.8;
+      ..strokeWidth = (radius * 0.025).clamp(1.0, 2.0);
 
-    // [5] رسم عقرب الساعات (الأسود القصير السميك)
-    final double hourHandLength = radius * 0.45;
+    // [4] رسم عقرب الساعات
+    final double hourHandLength = radius * 0.42;
     canvas.drawLine(
       Offset(
-        centerX - 8 * sin(hoursAngle),
-        centerY + 8 * cos(hoursAngle),
-      ), // امتداد خلفي بسيط لجمالية التصميم
+        centerX - (radius * 0.08) * sin(hoursAngle),
+        centerY + (radius * 0.08) * cos(hoursAngle),
+      ),
       Offset(
         centerX + hourHandLength * sin(hoursAngle),
         centerY - hourHandLength * cos(hoursAngle),
@@ -94,12 +68,12 @@ class ClockPainter extends CustomPainter {
       hourPaint,
     );
 
-    // [6] رسم عقرب الدقائق (الرمادي الطويل)
-    final double minuteHandLength = radius * 0.65;
+    // [5] رسم عقرب الدقائق
+    final double minuteHandLength = radius * 0.62;
     canvas.drawLine(
       Offset(
-        centerX - 12 * sin(minutesAngle),
-        centerY + 12 * cos(minutesAngle),
+        centerX - (radius * 0.1) * sin(minutesAngle),
+        centerY + (radius * 0.1) * cos(minutesAngle),
       ),
       Offset(
         centerX + minuteHandLength * sin(minutesAngle),
@@ -108,12 +82,12 @@ class ClockPainter extends CustomPainter {
       minutePaint,
     );
 
-    // [7] رسم عقرب الثواني (الأزرق الرفيع جداً المار بالمنتصف)
+    // [6] رسم عقرب الثواني
     final double secondHandLength = radius * 0.72;
     canvas.drawLine(
       Offset(
-        centerX - 15 * sin(secondsAngle),
-        centerY + 15 * cos(secondsAngle),
+        centerX - (radius * 0.12) * sin(secondsAngle),
+        centerY + (radius * 0.12) * cos(secondsAngle),
       ),
       Offset(
         centerX + secondHandLength * sin(secondsAngle),
@@ -122,16 +96,15 @@ class ClockPainter extends CustomPainter {
       secondPaint,
     );
 
-    // [8] نقطة الالتقاء المركزية الصغيرة الحامية للعقارب
+    // [7] زر المنتصف الذهبي المتناسق
     final Paint centerDotPaint = Paint()
-      ..color = const Color(0xFF1c2d37)
+      ..color = const Color(0xFFD4AF37)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 3.5, centerDotPaint);
+    canvas.drawCircle(center, (radius * 0.07).clamp(3.0, 5.5), centerDotPaint);
   }
 
   @override
   bool shouldRepaint(covariant ClockPainter oldDelegate) {
-    // إعادة الرسم فقط عندما تختلف قيمة الوقت لمنع استهلاك المعالج
     return oldDelegate.dateTime != dateTime;
   }
 }

@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:prayer_times_quran_azkar_app/features/home/ui/widgets/clock_painter_widget.dart';
-import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 
 class AnalogClockWidget extends StatefulWidget {
   final double size;
 
-  const AnalogClockWidget({super.key, this.size = 280});
+  const AnalogClockWidget({super.key, this.size = 120});
 
   @override
   State<AnalogClockWidget> createState() => _AnalogClockWidgetState();
@@ -20,45 +19,56 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
   @override
   void initState() {
     super.initState();
-    // تحديث الواجهة كل ثانية لربط العقارب بالوقت الفعلي الحالي
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _currentTime = DateTime.now();
-      });
+      if (mounted) {
+        setState(() {
+          _currentTime = DateTime.now();
+        });
+      }
     });
   }
 
   @override
   void dispose() {
-    _timer.cancel(); // إيقاف التايمر عند الخروج للحفاظ على موارد الجهاز
+    _timer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final double clockSize = widget.size;
+    final double numberFontSize = (clockSize * 0.105).clamp(8.0, 15.0);
+    final double radiusOffset = clockSize * 0.36;
+
     return Container(
-      width: widget.size,
-      height: widget.size,
+      width: clockSize,
+      height: clockSize,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
         shape: BoxShape.circle,
+        color: const Color(0xFF1C4537), // خلفية زيتونية راقية متناسقة مع الهوية البصرية
+        border: Border.all(
+          color: const Color(0xFFD4AF37), // إطار مذهب فاخر
+          width: (clockSize * 0.025).clamp(1.5, 3.5),
+        ),
         boxShadow: [
-          BoxShadow(color: Colors.yellow, blurRadius: 10, spreadRadius: 2),
+          BoxShadow(
+            color: const Color(0xFFD4AF37).withAlpha(60),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
         ],
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 1. رسم العقارب والخلفية الدائرية الزرقاء
+          // 1. رسم العقارب والخلفية من خلال ClockPainter
           Positioned.fill(
             child: CustomPaint(painter: ClockPainter(_currentTime)),
           ),
-          // 2. كتابة الأرقام من 1 إلى 12 وتوزيعها بشكل دائري متناسق
+          // 2. كتابة الأرقام من 1 إلى 12 وتوزيعها بشكل دائري متناسق وبحجم مرن محمي من التداخل
           ...List.generate(12, (index) {
             final int hour = index == 0 ? 12 : index;
             final double angle = (index * 30 - 90) * pi / 180;
-            // حساب المسافة لوضع الأرقام بداخل إطار الساعة المريح
-            final double radiusOffset = widget.size * 0.36;
 
             return Transform.translate(
               offset: Offset(
@@ -68,9 +78,9 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
               child: Text(
                 '$hour',
                 style: TextStyle(
-                  fontSize: context.setSp(15),
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
+                  fontSize: numberFontSize,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFFE5D2A0),
                 ),
               ),
             );
