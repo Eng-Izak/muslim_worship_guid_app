@@ -12,13 +12,11 @@ class RadioScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => RadioCubit()..loadRadioStations(),
       child: Scaffold(
-        backgroundColor: const Color(
-          0xFF1C4537,
-        ), // الخلفية الزيتونية الداكنة لراحة العين
+        backgroundColor: const Color(0xFF1C4537),
         appBar: AppBar(
           backgroundColor: const Color(0xFF215443),
           elevation: 0,
-          title: Text(
+          title: const Text(
             "إذاعات القرآن الكريم",
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -31,40 +29,45 @@ class RadioScreen extends StatelessWidget {
         body: BlocBuilder<RadioCubit, RadioState>(
           builder: (context, state) {
             if (state is RadioLoadingData) {
-              return Center(
+              return const Center(
                 child: CircularProgressIndicator(color: Color(0xFFC5A85A)),
               );
             } else if (state is RadioLoadedData) {
               return Directionality(
                 textDirection: TextDirection.rtl,
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(top: 10, bottom: 20),
-                  itemCount: state.stations.length,
-                  itemBuilder: (context, index) {
-                    final station = state.stations[index];
-                    final isCurrent = state.playingStationId == station.id;
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 850),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(top: 10, bottom: 20),
+                      itemCount: state.stations.length,
+                      itemBuilder: (context, index) {
+                        final station = state.stations[index];
+                        final isCurrent = state.playingStationId == station.id;
 
-                    return RadioStationCardWidget(
-                      station: station,
-                      isCurrentStation: isCurrent,
-                      isPlaying: state.isPlaying,
-                      isAudioLoading: state.isAudioLoading,
-                      onPlayTap: () {
-                        context.read<RadioCubit>().toggleRadioPlayback(
-                          station.url,
-                          station.id,
-                          stationName: station.name,
+                        return RadioStationCardWidget(
+                          station: station,
+                          isCurrentStation: isCurrent,
+                          isPlaying: state.isPlaying,
+                          isAudioLoading: state.isAudioLoading,
+                          onPlayTap: () {
+                            context.read<RadioCubit>().toggleRadioPlayback(
+                              station.url,
+                              station.id,
+                              stationName: station.name,
+                            );
+                          },
                         );
                       },
-                    );
-                  },
+                    ),
+                  ),
                 ),
               );
             } else if (state is RadioErrorData) {
               return Center(
                 child: Text(
                   state.errorMessage,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.red,
                   ),
                 ),

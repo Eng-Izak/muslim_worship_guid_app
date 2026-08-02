@@ -17,9 +17,9 @@ class QuranScreen extends StatelessWidget {
       child: Stack(
         children: [
           // 1. صورة الخلفية للمسجد
-          BackgroundImageWidget(),
+          const BackgroundImageWidget(),
           Opacity(
-            opacity: 0.7,
+            opacity: 0.85,
             child: Scaffold(
               backgroundColor: ThemingColors.kPrimary(context),
               appBar: AppBar(
@@ -44,16 +44,20 @@ class QuranScreen extends StatelessWidget {
               body: BlocBuilder<QuranCubit, QuranState>(
                 builder: (context, state) {
                   if (state is QuranLoading) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   } else if (state is QuranSurahsLoaded) {
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      itemCount: state.surahs.length,
-                      itemBuilder: (context, index) {
-                        final surah = state.surahs[index];
-
-                        return SurahFehrasCardWidget(surah: surah);
-                      },
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 850),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          itemCount: state.surahs.length,
+                          itemBuilder: (context, index) {
+                            final surah = state.surahs[index];
+                            return SurahFehrasCardWidget(surah: surah);
+                          },
+                        ),
+                      ),
                     );
                   } else if (state is QuranError) {
                     return Center(
@@ -65,17 +69,17 @@ class QuranScreen extends StatelessWidget {
                             color: Colors.red,
                             size: 40,
                           ),
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           Text(
                             state.errorMessage,
-                            style: TextStyle(color: Colors.red),
+                            style: const TextStyle(color: Colors.red),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: () =>
                                 context.read<QuranCubit>().loadQuranSurahs(),
-                            child: Text('إعادة المحاولة'),
+                            child: const Text('إعادة المحاولة'),
                           ),
                         ],
                       ),
