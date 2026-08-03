@@ -53,14 +53,36 @@ class SurahDetailsScreenTapTwoWidget extends StatelessWidget {
                         cubitState.playingReciterId ==
                         reciter.reciterId.toString();
 
-                    // 1. حالة فحص الكاش أو التحميل الفعلي من الإنترنت لأول مرة
+                    // 1. حالة فحص الكاش أو التحميل الفعلي من الإنترنت لأول مرة مع نسبة المئوية
                     if (isThisReciter && cubitState.isAudioLoading) {
+                      final int percentage = (cubitState.downloadProgress * 100).toInt().clamp(0, 99);
                       return SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.amber,
+                        width: 38,
+                        height: 38,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              value: cubitState.downloadProgress > 0.0 ? cubitState.downloadProgress : null,
+                              strokeWidth: 3.0,
+                              color: Colors.amber,
+                              backgroundColor: Colors.white24,
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Padding(
+                                padding: const EdgeInsets.all(2.0),
+                                child: Text(
+                                  "$percentage%",
+                                  style: const TextStyle(
+                                    color: Colors.amber,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }
@@ -78,6 +100,7 @@ class SurahDetailsScreenTapTwoWidget extends StatelessWidget {
                         context.read<SurahDetailsCubit>().toggleReciterAudio(
                           reciter.surahAudioUrl,
                           reciter.reciterId.toString(),
+                          allReciters: surah.recitersAudio,
                         );
                       },
                     );

@@ -16,6 +16,15 @@ class TotalMuslimApp extends StatelessWidget {
 
   const TotalMuslimApp({super.key});
 
+  TextTheme _getSafeTextTheme(String fontFamily, TextTheme baseTextTheme) {
+    try {
+      return GoogleFonts.getTextTheme(fontFamily, baseTextTheme);
+    } catch (e) {
+      debugPrint("⚠️ GoogleFonts.getTextTheme fallback triggered for $fontFamily: $e");
+      return baseTextTheme.apply(fontFamily: fontFamily);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -74,7 +83,7 @@ class TotalMuslimApp extends StatelessWidget {
                     ),
                     scaffoldBackgroundColor: const Color(0xFFF5F0E8),
                     textTheme:
-                        GoogleFonts.getTextTheme(
+                        _getSafeTextTheme(
                           settingsState.fontFamily,
                           ThemeData.light().textTheme,
                         ).apply(
@@ -101,7 +110,7 @@ class TotalMuslimApp extends StatelessWidget {
                     ),
                     scaffoldBackgroundColor: const Color(0xFF173B30),
                     textTheme:
-                        GoogleFonts.getTextTheme(
+                        _getSafeTextTheme(
                           settingsState.fontFamily,
                           ThemeData.dark().textTheme,
                         ).apply(

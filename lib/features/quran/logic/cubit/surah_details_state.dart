@@ -9,12 +9,14 @@ class SurahDetailsLoaded extends SurahDetailsState {
   final String? playingReciterId;
   final bool isPlaying;
   final bool isAudioLoading;
+  final double downloadProgress;
 
   SurahDetailsLoaded({
     required this.ayahs,
     this.playingReciterId,
     this.isPlaying = false,
     this.isAudioLoading = false,
+    this.downloadProgress = 0.0,
   });
 
   SurahDetailsLoaded copyWith({
@@ -22,6 +24,7 @@ class SurahDetailsLoaded extends SurahDetailsState {
     String? playingReciterId,
     bool? isPlaying,
     bool? isAudioLoading,
+    double? downloadProgress,
     bool resetPlaying = false,
   }) {
     return SurahDetailsLoaded(
@@ -30,10 +33,12 @@ class SurahDetailsLoaded extends SurahDetailsState {
           ? null
           : (playingReciterId ?? this.playingReciterId),
       isPlaying: resetPlaying ? false : (isPlaying ?? this.isPlaying),
-      // 🔥 تصحيح الشرط: إذا كان reset نلغيه، وإلا نستقبل القيمة الصريحة الجديدة حتى لو كانت false
       isAudioLoading: resetPlaying
           ? false
           : (isAudioLoading ?? this.isAudioLoading),
+      downloadProgress: resetPlaying
+          ? 0.0
+          : (downloadProgress ?? this.downloadProgress),
     );
   }
 }

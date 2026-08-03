@@ -13,70 +13,77 @@ class AppDeveloperFooterWidget extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 450),
         child: SafeArea(
-          top: false, // لضمان عدم تداخل الودجت مع شريط التنقل السفلي للهواتف الحديثة (Home Indicator)
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // الجزء الأيسر: الشعار والنص الإنجليزي
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
+          top: false,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Text(
-                    'DESIGNED & DEVELOPED BY',
-                    style: TextStyle(
-                      color: const Color.fromARGB(160, 212, 175, 55),
-                      fontSize: context.responsiveValue(mobile: 7.0, tablet: 8.0, landscape: 7.0),
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0.5,
-                    ),
+                  // الجزء الأيسر: الشعار والنص الإنجليزي
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'DESIGNED & DEVELOPED BY',
+                        style: TextStyle(
+                          color: const Color.fromARGB(160, 212, 175, 55),
+                          fontSize: context.responsiveValue(mobile: 7.0, tablet: 8.0, landscape: 7.0),
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      Text(
+                        'Eng.Izak Rammah',
+                        style: TextStyle(
+                          color: const Color(0xFFD4AF37),
+                          fontSize: context.responsiveValue(mobile: 10.0, tablet: 12.0, landscape: 10.0),
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'Eng.Izak Rammah',
-                    style: TextStyle(
-                      color: const Color(0xFFD4AF37), // اللون العاجي/الذهبي
-                      fontSize: context.responsiveValue(mobile: 10.0, tablet: 12.0, landscape: 10.0),
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
+
+                  const SizedBox(width: 12),
+
+                  Image.asset(
+                    "assets/images/logo.png",
+                    height: logoHeight,
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // الجزء الأيمن: النص العربي
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'مصمم ومطور التطبيق',
+                        style: TextStyle(
+                          color: const Color.fromARGB(160, 212, 175, 55),
+                          fontSize: context.responsiveValue(mobile: 9.0, tablet: 11.0, landscape: 9.0),
+                        ),
+                      ),
+                      Text(
+                        'م.إسحاق رماح',
+                        style: TextStyle(
+                          color: const Color(0xFFD4AF37),
+                          fontSize: context.responsiveValue(mobile: 11.0, tablet: 13.0, landscape: 11.0),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-    
-              Image.asset(
-                "assets/images/logo.png",
-                height: logoHeight,
-              ),
-    
-              // الجزء الأيمن: النص العربي
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'مصمم ومطور التطبيق   ',
-                    style: TextStyle(
-                      color: const Color.fromARGB(160, 212, 175, 55),
-                      fontSize: context.responsiveValue(mobile: 9.0, tablet: 11.0, landscape: 9.0),
-                      fontFamily: 'Tajawal',
-                    ),
-                  ),
-                  Text(
-                    'م.إسحاق رماح',
-                    style: TextStyle(
-                      color: const Color(0xFFD4AF37),
-                      fontSize: context.responsiveValue(mobile: 11.0, tablet: 13.0, landscape: 11.0),
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Tajawal', // أو الخط المستخدم في مشروعك
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-

@@ -55,6 +55,7 @@ class RadioScreen extends StatelessWidget {
                               station.url,
                               station.id,
                               stationName: station.name,
+                              imageUrl: station.imageUrl,
                             );
                           },
                         );

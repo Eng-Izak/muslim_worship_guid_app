@@ -2,31 +2,41 @@ import 'dart:async';
 import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/asset_json_decompressor.dart';
 import 'package:prayer_times_quran_azkar_app/features/quran/data/models/ayah_model.dart';
+import 'package:prayer_times_quran_azkar_app/features/quran/data/models/reciter_audio_model.dart';
 
 part 'surah_details_state.dart';
+
+const List<String> kSurahArabicNames = [
+  'الْفَاتِحَةِ', 'الْبَقَرَةِ', 'آلِ عِمْرَانَ', 'النِّسَاءِ', 'الْمَائِدَةِ', 'الأَنْعَامِ', 'الأَعْرَافِ', 'الأَنْفَالِ', 'التَّوْبَةِ', 'يُونُسَ',
+  'هُودٍ', 'يُوسُفَ', 'الرَّعْدِ', 'إِبْرَاهِيمَ', 'الْحِجْرِ', 'النَّحْلِ', 'الإِسْرَاءِ', 'الْكَهْفِ', 'مَرْيَمَ', 'طَهَ',
+  'الأَنْبِيَاءِ', 'الْحَجِّ', 'الْمُؤْمِنُونَ', 'النُّورِ', 'الْفُرْقَانِ', 'الشُّعَرَاءِ', 'النَّمْلِ', 'الْقَصَصِ', 'الْعَنْكَبُوتِ', 'الرُّومِ',
+  'لُقْمَانَ', 'السَّجْدَةِ', 'الأَحْزَابِ', 'سَبَإٍ', 'فَاطِرٍ', 'يس', 'الصَّافَّاتِ', 'ص', 'الزُّمَرِ', 'غَافِرٍ',
+  'فُصِّلَتْ', 'الشُّورَى', 'الزُّخْرُفِ', 'الدُّخَانِ', 'الْجَاثِيَةِ', 'الأَحْقَافِ', 'مُحَمَّدٍ', 'الْفَتْحِ', 'الْحُجُرَاتِ', 'ق',
+  'الذَّارِيَاتِ', 'الطُّورِ', 'النَّجْمِ', 'الْقَمَرِ', 'الرَّحْمَنِ', 'الْوَاقِعَةِ', 'الْحَدِيدِ', 'الْمُجَادَلَةِ', 'الْمُجَادَلَةِ', 'الْمُمْتَحَنَةِ',
+  'الصَّفِّ', 'الْجُمُعَةِ', 'الْمُنَافِقُونَ', 'التَّغَابُنِ', 'الطَّلاَقِ', 'التَّحْرِيمِ', 'الْمُلْكِ', 'الْقَلَمِ', 'الْحَاقَّةِ', 'الْمَعَارِجِ',
+  'نُوحٍ', 'الْجِنِّ', 'الْمُزَّمِّلِ', 'الْمُدَّثِّرِ', 'الْقِيَامَةِ', 'الإِنْسَانِ', 'الْمُرْسَلاَتِ', 'النَّبَإِ', 'النَّازِعَاتِ', 'عَبَسَ',
+  'التَّكْوِيرِ', 'الإِنْفِطَارِ', 'الْمُطَفِّفِينَ', 'الإِنْشِقَاقِ', 'الْبُرُوجِ', 'الطَّارِقِ', 'الأَعْلَى', 'الْغَاشِيَةِ', 'الْفَجْرِ', 'الْبَلَدِ',
+  'الشَّمْسِ', 'اللَّيْلِ', 'الضُّحَى', 'الشَّرْحِ', 'التِّينِ', 'الْعَلَقِ', 'الْقَدْرِ', 'الْبَيِّنَةِ', 'الزَّلْزَلَةِ', 'الْعَادِيَاتِ',
+  'الْقَارِعَةِ', 'التَّكَاثُرِ', 'الْعَصْرِ', 'الْهُمَزَةِ', 'الْفِيلِ', 'قُرَيْشٍ', 'الْمَاعُونِ', 'الْكَوْثَرِ', 'الْكَافِرُونَ', 'النَّصْرِ',
+  'الْمَسَدِ', 'الإِخْلاَصِ', 'الْفَلَقِ', 'النَّاسِ'
+];
 
 class SurahDetailsCubit extends Cubit<SurahDetailsState> {
   final AudioPlayer _audioPlayer = DependencyInjection.getIt<AudioPlayer>();
   int? _surahNumber;
   String? _surahName;
 
+  String? get currentSurahName => _surahName;
+
   StreamSubscription? _playerSubscription;
   StreamSubscription? _playerStateSubscription;
-
-  final CacheManager _audioCacheManager = CacheManager(
-    Config(
-      'audio_surahs_cache_key_v1',
-      stalePeriod: const Duration(days: 30),
-      maxNrOfCacheObjects: 114,
-    ),
-  );
+  StreamSubscription? _bufferedPositionSubscription;
 
   SurahDetailsCubit() : super(SurahDetailsLoading()) {
     _playerSubscription = _audioPlayer.playbackEventStream.listen((event) {
@@ -35,15 +45,27 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
     _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
       _syncPlayerState();
     });
+    _bufferedPositionSubscription = _audioPlayer.bufferedPositionStream.listen((buffered) {
+      if (isClosed) return;
+      if (state is SurahDetailsLoaded) {
+        final currentState = state as SurahDetailsLoaded;
+        final totalDuration = _audioPlayer.duration;
+        if (totalDuration != null && totalDuration.inMilliseconds > 0) {
+          final progress = (buffered.inMilliseconds / totalDuration.inMilliseconds).clamp(0.0, 1.0);
+          if ((progress - currentState.downloadProgress).abs() >= 0.02 || progress >= 0.99) {
+            emit(currentState.copyWith(downloadProgress: progress));
+          }
+        }
+      }
+    });
   }
 
   void _syncPlayerState() {
     if (isClosed) return;
     if (state is SurahDetailsLoaded) {
       final currentState = state as SurahDetailsLoaded;
-      
-      final seqState = _audioPlayer.sequenceState;
 
+      final seqState = _audioPlayer.sequenceState;
       final currentSource = seqState.currentSource;
       if (currentSource == null) {
         emit(currentState.copyWith(resetPlaying: true));
@@ -53,28 +75,43 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
       final tag = currentSource.tag;
       if (tag is MediaItem) {
         final String currentMediaId = tag.id;
-        if (currentMediaId.startsWith('surah_${_surahNumber ?? 0}_')) {
+        if (currentMediaId.startsWith('surah_')) {
           final parts = currentMediaId.split('_');
           if (parts.length >= 3) {
-            final reciterId = parts[2];
-            final isPlaying = _audioPlayer.playing;
-            final isCompleted = _audioPlayer.processingState == ProcessingState.completed;
-            
+            final int surahNum = int.tryParse(parts[1]) ?? (_surahNumber ?? 1);
+            final String reciterId = parts[2];
+            final bool isPlaying = _audioPlayer.playing;
+            final bool isCompleted =
+                _audioPlayer.processingState == ProcessingState.completed;
+
+            _surahNumber = surahNum;
+            if (surahNum >= 1 && surahNum <= kSurahArabicNames.length) {
+              _surahName = kSurahArabicNames[surahNum - 1];
+            }
+
             if (isCompleted) {
-              emit(currentState.copyWith(resetPlaying: true, isAudioLoading: false));
+              emit(
+                currentState.copyWith(
+                  resetPlaying: true,
+                  isAudioLoading: false,
+                ),
+              );
             } else {
-              emit(currentState.copyWith(
-                playingReciterId: reciterId,
-                isPlaying: isPlaying,
-                isAudioLoading: _audioPlayer.processingState == ProcessingState.buffering || 
-                                 _audioPlayer.processingState == ProcessingState.loading,
-              ));
+              emit(
+                currentState.copyWith(
+                  playingReciterId: reciterId,
+                  isPlaying: isPlaying,
+                  isAudioLoading:
+                      _audioPlayer.processingState == ProcessingState.buffering ||
+                      _audioPlayer.processingState == ProcessingState.loading,
+                ),
+              );
             }
             return;
           }
         }
       }
-      
+
       emit(currentState.copyWith(resetPlaying: true));
     }
   }
@@ -109,13 +146,17 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
         final tag = currentSource.tag;
         if (tag is MediaItem) {
           final String currentMediaId = tag.id;
-          if (currentMediaId.startsWith('surah_${surahNumber}_')) {
+          if (currentMediaId.startsWith('surah_')) {
             final parts = currentMediaId.split('_');
             if (parts.length >= 3) {
-              playingReciterId = parts[2];
-              isPlaying = _audioPlayer.playing;
-              isAudioLoading = _audioPlayer.processingState == ProcessingState.buffering || 
-                               _audioPlayer.processingState == ProcessingState.loading;
+              final int surahNum = int.tryParse(parts[1]) ?? surahNumber;
+              if (surahNum == surahNumber) {
+                playingReciterId = parts[2];
+                isPlaying = _audioPlayer.playing;
+                isAudioLoading =
+                    _audioPlayer.processingState == ProcessingState.buffering ||
+                    _audioPlayer.processingState == ProcessingState.loading;
+              }
             }
           }
         }
@@ -135,8 +176,13 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
     }
   }
 
-  /// تشغيل أو إيقاف صوت القارئ للسورة مدمجة
-  Future<void> toggleReciterAudio(String audioUrl, String reciterId) async {
+  /// تشغيل أو إيقاف صوت القارئ للسورة (مع بناء قائمة الـ 114 سورة للتنقل بين السور على الإشعار)
+  Future<void> toggleReciterAudio(
+    String audioUrl,
+    String reciterId, {
+    String? reciterImg,
+    List<ReciterAudioModel>? allReciters,
+  }) async {
     if (state is SurahDetailsLoaded) {
       final currentState = state as SurahDetailsLoaded;
 
@@ -154,8 +200,7 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
           if (isClosed) return;
           emit(currentState.copyWith(isPlaying: true, isAudioLoading: false));
         }
-      }
-      else {
+      } else {
         try {
           emit(
             currentState.copyWith(
@@ -165,42 +210,46 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
             ),
           );
 
-          // إيقاف تشغيل الصوت السابق وتفريغ البث على الويندوز
           await _audioPlayer.stop();
 
-          debugPrint("🔍 Checking local storage cache for audio: $audioUrl");
-          final FileInfo? fileInfo = await _audioCacheManager.getFileFromCache(
-            audioUrl,
-          );
-
-          String sourcePath;
-          if (fileInfo != null && fileInfo.file.existsSync()) {
-            debugPrint(
-              "💾🎯 Audio found locally in Cache: ${fileInfo.file.path}",
-            );
-            sourcePath = fileInfo.file.path;
-          } else {
-            debugPrint("🌐 Audio not found in Cache. Downloading...");
-            final file = await _audioCacheManager.getSingleFile(audioUrl);
-            sourcePath = file.path;
-          }
-
-          if (isClosed) return;
+          final String defaultArt = (reciterImg != null && reciterImg.isNotEmpty)
+              ? reciterImg
+              : 'https://cdns-images.dzcdn.net/images/talk/06b711ac6da4cde0eb698e244f5e27b8/500x500.jpg';
 
           final int reciterIntId = int.tryParse(reciterId) ?? 1;
-          final MediaItem audioTag = MediaItem(
-            id: 'surah_${_surahNumber ?? 0}_$reciterId',
-            album: 'القرآن الكريم',
-            title: 'سورة ${_surahName ?? "غير معروف"}',
-            artist: reciterIntId.reciterNameAr,
+          final String reciterNameAr = reciterIntId.reciterNameAr;
+
+          final List<AudioSource> playlistSources = [];
+          final int lastSlash = audioUrl.lastIndexOf('/');
+          final String baseUrl = (lastSlash != -1) ? audioUrl.substring(0, lastSlash + 1) : '';
+          final String fileName = (lastSlash != -1) ? audioUrl.substring(lastSlash + 1) : '';
+          final bool isThreeDigits = fileName.length >= 7 || fileName.startsWith('0');
+
+          for (int s = 1; s <= 114; s++) {
+            final String surahNumStr = isThreeDigits ? s.toString().padLeft(3, '0') : s.toString();
+            final String surahAudioUrl = baseUrl.isNotEmpty ? '$baseUrl$surahNumStr.mp3' : audioUrl;
+            final String sName = (s <= kSurahArabicNames.length) ? kSurahArabicNames[s - 1] : 'سورة $s';
+
+            playlistSources.add(
+              AudioSource.uri(
+                Uri.parse(surahAudioUrl),
+                tag: MediaItem(
+                  id: 'surah_${s}_$reciterId',
+                  album: 'القرآن الكريم',
+                  title: sName.startsWith('سُورَةُ') ? sName : 'سُورَةُ $sName',
+                  artist: reciterNameAr,
+                  artUri: Uri.tryParse(defaultArt),
+                ),
+              ),
+            );
+          }
+
+          final int initialIndex = ((_surahNumber ?? 1) - 1).clamp(0, 113);
+          await _audioPlayer.setAudioSources(
+            playlistSources,
+            initialIndex: initialIndex,
           );
 
-          await _audioPlayer.setAudioSource(
-            AudioSource.file(
-              sourcePath,
-              tag: audioTag,
-            ),
-          );
           await _audioPlayer.play();
 
           if (!kIsWeb && Platform.isWindows) {
@@ -219,7 +268,7 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
             ),
           );
         } catch (e) {
-          debugPrint("❌ Error processing audio cache: $e");
+          debugPrint("❌ Error processing audio playlist: $e");
           if (isClosed) return;
           emit(
             currentState.copyWith(
@@ -234,23 +283,46 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
     }
   }
 
+  /// استخراج آيات السورة بدقة وبشكل آمن من مختلف أنواع هياكل بيانات quranV4.json
   static List<AyahModel> _parseAndFilterAyahs(Map<String, dynamic> data) {
     final Map<String, dynamic> quranMap = data['quranMap'];
     final int targetSurahNumber = data['surahNumber'];
-    final List<dynamic> rawAyahs = quranMap['data']['ayahs'] ?? [];
+    final dataContent = quranMap['data'];
 
-    final filtered = rawAyahs
-        .where((item) => item['surah']['number'] == targetSurahNumber)
-        .map((item) => AyahModel.fromJson(item))
-        .toList();
+    List<dynamic> rawAyahs = [];
 
-    return filtered;
+    if (dataContent is Map && dataContent.containsKey('surahs')) {
+      final List<dynamic> surahs = dataContent['surahs'] ?? [];
+      final targetSurah = surahs.firstWhere(
+        (s) => s['number'] == targetSurahNumber,
+        orElse: () => null,
+      );
+      if (targetSurah != null && targetSurah['ayahs'] != null) {
+        rawAyahs = targetSurah['ayahs'];
+      }
+    } else if (dataContent is Map && dataContent.containsKey('ayahs')) {
+      final List<dynamic> allAyahs = dataContent['ayahs'] ?? [];
+      rawAyahs = allAyahs
+          .where((item) => item['surah'] != null && item['surah']['number'] == targetSurahNumber)
+          .toList();
+    } else if (dataContent is List) {
+      final targetSurah = dataContent.firstWhere(
+        (s) => s['number'] == targetSurahNumber,
+        orElse: () => null,
+      );
+      if (targetSurah != null && targetSurah['ayahs'] != null) {
+        rawAyahs = targetSurah['ayahs'];
+      }
+    }
+
+    return rawAyahs.map((item) => AyahModel.fromJson(item)).toList();
   }
 
   @override
   Future<void> close() async {
     await _playerSubscription?.cancel();
     await _playerStateSubscription?.cancel();
+    await _bufferedPositionSubscription?.cancel();
     return super.close();
   }
 }

@@ -107,7 +107,12 @@ class RadioCubit extends Cubit<RadioState> {
   }
 
   /// تشغيل أو إيقاف محطة الراديو حياً
-  Future<void> toggleRadioPlayback(String streamUrl, int stationId, {String stationName = 'إذاعة القرآن الكريم'}) async {
+  Future<void> toggleRadioPlayback(
+    String streamUrl,
+    int stationId, {
+    String stationName = 'إذاعة القرآن الكريم',
+    String imageUrl = '',
+  }) async {
     if (state is RadioLoadedData) {
       final currentState = state as RadioLoadedData;
 
@@ -141,18 +146,30 @@ class RadioCubit extends Cubit<RadioState> {
           // إيقاف وتصفية خط البث السابق لتهيئة محرك الصوت في الويندوز
           await _audioPlayer.stop();
 
-          final MediaItem audioTag = MediaItem(
-            id: 'radio_$stationId',
-            album: 'إذاعات القرآن الكريم',
-            title: stationName,
-            artist: 'بث مباشر',
+          final List<AudioSource> playlistSources = currentState.stations.map((st) {
+            final String artPath = st.imageUrl.isNotEmpty
+                ? st.imageUrl
+                : 'https://cdns-images.dzcdn.net/images/talk/06b711ac6da4cde0eb698e244f5e27b8/500x500.jpg';
+
+            return AudioSource.uri(
+              Uri.parse(st.url),
+              tag: MediaItem(
+                id: 'radio_${st.id}',
+                album: 'إذاعات القرآن الكريم',
+                title: st.name,
+                artist: 'بث مباشر',
+                artUri: Uri.tryParse(artPath),
+              ),
+            );
+          }).toList();
+
+          final targetIndex = currentState.stations.indexWhere(
+            (st) => st.id == stationId,
           );
 
-          await _audioPlayer.setAudioSource(
-            AudioSource.uri(
-              Uri.parse(streamUrl),
-              tag: audioTag,
-            ),
+          await _audioPlayer.setAudioSources(
+            playlistSources,
+            initialIndex: targetIndex >= 0 ? targetIndex : 0,
           );
           await _audioPlayer.play();
 

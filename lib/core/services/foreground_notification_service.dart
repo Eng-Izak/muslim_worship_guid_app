@@ -26,7 +26,7 @@ class ForegroundNotificationService {
   /// التحقق من أن المنصة تدعم الخدمة الخلفية (أندرويد و iOS فقط)
   static bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-  /// تهيئة إعدادات الخدمة الخلفية
+  /// تهيئة إعدادات الخدمة الخلفية المستمرة
   static Future<void> init() async {
     if (!isSupported) return;
     FlutterForegroundTask.init(
@@ -48,6 +48,21 @@ class ForegroundNotificationService {
         allowWifiLock: true,
       ),
     );
+
+    // التشغيل التلقائي المستمر في الخلفية إذا كانت الإحداثيات محفوظة مسبقاً
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final double lat = prefs.getDouble('lat') ?? 0.0;
+      final double lng = prefs.getDouble('lng') ?? 0.0;
+      final String city = prefs.getString('city_name') ?? "موقعي الحالي";
+      if (lat != 0.0 && lng != 0.0) {
+        if (!await FlutterForegroundTask.isRunningService) {
+          await start(latitude: lat, longitude: lng, cityName: city);
+        }
+      }
+    } catch (e) {
+      log("Error auto-starting persistent foreground service on init: $e");
+    }
   }
 
   /// بدء الخدمة الخلفية المستمرة

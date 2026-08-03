@@ -7,9 +7,35 @@ import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/settin
 class TypographySelectorCard extends StatelessWidget {
   const TypographySelectorCard({super.key});
 
+  /// الحصول على الخط بأمان بدون إطلاق استثناءات عند عدم وجود الشبكة أو على نظام الويندوز
+  TextStyle _getSafeFont(
+    String fontName, {
+    TextStyle? textStyle,
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+  }) {
+    try {
+      return GoogleFonts.getFont(
+        fontName,
+        textStyle: textStyle,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        color: color,
+      );
+    } catch (_) {
+      return (textStyle ?? const TextStyle()).copyWith(
+        fontFamily: fontName,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        color: color,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // قائمة بالخطوط الإسلامية الفخمة التي قمنا بتهيئتها من Google Fonts
+    // قائمة بالخطوط الإسلامية المعتمدة
     final List<String> availableFonts = ['Cairo', 'Almarai', 'Tajawal', 'Amiri', 'Changa', 'Lateef'];
 
     return BlocBuilder<SettingsCubit, SettingsState>(
@@ -75,7 +101,7 @@ class TypographySelectorCard extends StatelessWidget {
                         child: ChoiceChip(
                           label: Text(
                             font,
-                            style: GoogleFonts.getFont(font, fontSize: 13),
+                            style: _getSafeFont(font, fontSize: 13),
                           ),
                           selected: isSelected,
                           selectedColor: const Color(0xFFC5A85A),
@@ -134,7 +160,7 @@ class TypographySelectorCard extends StatelessWidget {
                       Text(
                         '«اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ»',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.getFont(
+                        style: _getSafeFont(
                           state.fontFamily,
                           textStyle: TextStyle(
                             fontSize: 18 * state.fontScale,

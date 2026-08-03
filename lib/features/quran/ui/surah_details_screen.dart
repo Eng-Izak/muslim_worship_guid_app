@@ -53,31 +53,50 @@ class SurahDetailsScreen extends StatelessWidget {
                   bottom: TabBar(
                     tabs: [
                       Tab(
-                        icon: Icon(
-                          Icons.menu_book_rounded,
-                          color: ThemingColors.kWarning,
-                        ),
-
-                        child: Text(
-                          "قراءة السورة",
-                          style: TextStyle(
-                            color: ThemingColors.kClockBody(context),
-                            fontSize: context.setSp(18),
-                            fontWeight: .bold,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.menu_book_rounded,
+                                color: ThemingColors.kWarning,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "قراءة السورة",
+                                style: TextStyle(
+                                  color: ThemingColors.kClockBody(context),
+                                  fontSize: context.setSp(16),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                       Tab(
-                        icon: Icon(
-                          Icons.audiotrack_rounded,
-                          color: ThemingColors.kWarning,
-                        ),
-                        child: Text(
-                          "الاستماع والتفاصيل",
-                          style: TextStyle(
-                            color: ThemingColors.kClockBody(context),
-                            fontSize: context.setSp(18),
-                            fontWeight: .bold,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.audiotrack_rounded,
+                                color: ThemingColors.kWarning,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "الاستماع والتفاصيل",
+                                style: TextStyle(
+                                  color: ThemingColors.kClockBody(context),
+                                  fontSize: context.setSp(16),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

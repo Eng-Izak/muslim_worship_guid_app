@@ -227,11 +227,13 @@ class NotificationService {
         'قناة أذان الصلاة',
         channelDescription: 'إشعارات أذان الصلوات الخمس بصوت الأذان',
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
         playSound: true,
         sound: RawResourceAndroidNotificationSound(soundFileName),
         fullScreenIntent: true,
         category: AndroidNotificationCategory.alarm,
+        visibility: NotificationVisibility.public,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       );
     } else {
       androidDetails = const AndroidNotificationDetails(
@@ -239,10 +241,12 @@ class NotificationService {
         'التنبيهات المجدولة',
         channelDescription: 'إشعارات مجدولة لمواقيت الصلوات والأذكار',
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
         playSound: true,
         fullScreenIntent: true,
         category: AndroidNotificationCategory.alarm,
+        visibility: NotificationVisibility.public,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       );
     }
 
