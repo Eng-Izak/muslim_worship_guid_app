@@ -16,96 +16,9 @@ class SurahFehrasCardWidget extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       elevation: 1.5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        // رقم السورة فى الكارد الخاص بالفهرس
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: ThemingColors.kPrimary(context).withAlpha(100),
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            '${surah.number}',
-            style: TextStyle(
-              fontSize: context.setSp(16),
-              fontWeight: FontWeight.bold,
-              color: ThemingColors.kTextMain(context),
-            ),
-          ),
-        ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      surah.revelationType == 'مكية'
-                          ? Icons.wb_sunny_outlined
-                          : Icons.location_city_outlined,
-                      size: 15,
-                      color: ThemingColors.kWarning,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      surah.revelationType,
-                      style: TextStyle(
-                        color: ThemingColors.kPrimaryDark(context),
-                        fontSize: context.setSp(14),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(width: 16),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.menu_book_rounded,
-                      size: 15,
-                      color: ThemingColors.kPrimary(context),
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      ' آيات ${surah.ayahsNumber} ',
-                      style: TextStyle(
-                        color: ThemingColors.kPrimaryDark(context),
-                        fontSize: context.setSp(12),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            Column(
-              children: [
-                Text(
-                  surah.name,
-                  style: TextStyle(
-                    color: ThemingColors.kPrimaryDark(context),
-                    fontWeight: FontWeight.bold,
-                    fontSize: context.setSp(17),
-                  ),
-                ),
-                // const Spacer(),
-                Text(
-                  surah.englishName,
-                  style: TextStyle(
-                    fontSize: context.setSp(13),
-                    color: ThemingColors.kPrimaryDark(context).withAlpha(200),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // الانتقال المستقبلي لشاشة الآيات
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -113,6 +26,116 @@ class SurahFehrasCardWidget extends StatelessWidget {
             ),
           );
         },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 1. رقم السورة في دائرة مخصصة
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: ThemingColors.kPrimary(context).withAlpha(100),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${surah.number}',
+                  style: TextStyle(
+                    fontSize: context.setSp(16),
+                    fontWeight: FontWeight.bold,
+                    color: ThemingColors.kTextMain(context),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
+              // 2. معلومات السورة في الجانب الأيسر (مكية/مدنية وعدد الآيات)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        surah.revelationType == 'مكية'
+                            ? Icons.wb_sunny_outlined
+                            : Icons.location_city_outlined,
+                        size: 15,
+                        color: ThemingColors.kWarning,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        surah.revelationType,
+                        style: TextStyle(
+                          color: ThemingColors.kPrimaryDark(context),
+                          fontSize: context.setSp(13),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.menu_book_rounded,
+                        size: 15,
+                        color: ThemingColors.kPrimary(context),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'آيات ${surah.ayahsNumber}',
+                        style: TextStyle(
+                          color: ThemingColors.kPrimaryDark(context),
+                          fontSize: context.setSp(12),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const Spacer(),
+
+              // 3. اسم السورة باللغة العربية والإنجليزية مفصولين تماماً بحجم مرن ومساحة رأسية آمنة
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      surah.name,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        color: ThemingColors.kPrimaryDark(context),
+                        fontWeight: FontWeight.bold,
+                        fontSize: context.setSp(16),
+                        height: 1.35, // ارتفاع سطر آمن تماماً للتشكيل والحركات مثل الكسرة والسكون
+                      ),
+                    ),
+                    const SizedBox(height: 6), // فاصل رأسي حقيقي ومضمون لمنع أي تداخل
+                    Text(
+                      surah.englishName,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: context.setSp(12),
+                        fontWeight: FontWeight.w500,
+                        color: ThemingColors.kPrimaryDark(context).withAlpha(190),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

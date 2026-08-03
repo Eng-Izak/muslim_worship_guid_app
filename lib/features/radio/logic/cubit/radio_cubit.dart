@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -37,24 +38,21 @@ class RadioCubit extends Cubit<RadioState> {
       }
 
       final tag = currentSource.tag;
-      if (tag is! MediaItem) {
-        emit(currentState.copyWith(resetPlaying: true));
-        return;
-      }
+      if (tag is MediaItem) {
+        final String currentMediaId = tag.id;
+        if (currentMediaId.startsWith('radio_')) {
+          final idStr = currentMediaId.replaceFirst('radio_', '');
+          final stationId = int.tryParse(idStr);
+          final isPlaying = _audioPlayer.playing;
 
-      final String currentMediaId = tag.id;
-      if (currentMediaId.startsWith('radio_')) {
-        final idStr = currentMediaId.replaceFirst('radio_', '');
-        final stationId = int.tryParse(idStr);
-        final isPlaying = _audioPlayer.playing;
-
-        emit(currentState.copyWith(
-          playingStationId: stationId,
-          isPlaying: isPlaying,
-          isAudioLoading: _audioPlayer.processingState == ProcessingState.buffering ||
-              _audioPlayer.processingState == ProcessingState.loading,
-        ));
-        return;
+          emit(currentState.copyWith(
+            playingStationId: stationId,
+            isPlaying: isPlaying,
+            isAudioLoading: _audioPlayer.processingState == ProcessingState.buffering ||
+                _audioPlayer.processingState == ProcessingState.loading,
+          ));
+          return;
+        }
       }
 
       emit(currentState.copyWith(resetPlaying: true));
@@ -116,7 +114,7 @@ class RadioCubit extends Cubit<RadioState> {
       // 1. إذا ضغط على نفس الإذاعة الشغالة حالياً (إيقاف / تشغيل)
       if (currentState.playingStationId == stationId) {
         if (currentState.isAudioLoading) {
-          return; // منع الضربات المتكررة أثناء شبك الإشارة
+          return;
         }
 
         if (currentState.isPlaying) {
@@ -132,7 +130,6 @@ class RadioCubit extends Cubit<RadioState> {
       // 2. إذا اختار إذاعة جديدة تماماً
       else {
         try {
-          // إظهار مؤشر تحميل مخصص لهذه المحطة فوراً
           emit(
             currentState.copyWith(
               playingStationId: stationId,
@@ -141,20 +138,31 @@ class RadioCubit extends Cubit<RadioState> {
             ),
           );
 
-          // الشبك على البث المباشر مع بيانات الميديا
+          // إيقاف وتصفية خط البث السابق لتهيئة محرك الصوت في الويندوز
+          await _audioPlayer.stop();
+
+          final MediaItem audioTag = MediaItem(
+            id: 'radio_$stationId',
+            album: 'إذاعات القرآن الكريم',
+            title: stationName,
+            artist: 'بث مباشر',
+          );
+
           await _audioPlayer.setAudioSource(
             AudioSource.uri(
               Uri.parse(streamUrl),
-              tag: MediaItem(
-                id: 'radio_$stationId',
-                album: 'إذاعات القرآن الكريم',
-                title: stationName,
-                artist: 'بث مباشر',
-                artUri: Uri.parse('asset:///assets/images/logo.png'),
-              ),
+              tag: audioTag,
             ),
           );
           await _audioPlayer.play();
+
+          // ضمان وتأكيد بدء البث الصوتي الفعلي على محرك الصوت في نظام الويندوز
+          if (!kIsWeb && Platform.isWindows) {
+            await Future.delayed(const Duration(milliseconds: 200));
+            if (_audioPlayer.playing) {
+              await _audioPlayer.play();
+            }
+          }
 
           if (isClosed) return;
           emit(

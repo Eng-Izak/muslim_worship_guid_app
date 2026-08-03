@@ -6,6 +6,9 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   flutter_timezone
   geolocator_windows
+  just_audio_windows
+  screen_retriever_windows
+  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

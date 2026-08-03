@@ -216,6 +216,21 @@ Win32Window::MessageHandler(HWND hwnd,
     case WM_DWMCOLORIZATIONCOLORCHANGED:
       UpdateTheme(hwnd);
       return 0;
+
+    case WM_GETMINMAXINFO: {
+      MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lparam);
+      UINT dpi = GetDpiForWindow(hwnd);
+      double scale = (dpi > 0) ? (dpi / 96.0) : 1.0;
+
+      // مستوى أقل أبعاد للتطبيق (Minimum bounds) - 420x680 px
+      info->ptMinTrackSize.x = static_cast<LONG>(420 * scale);
+      info->ptMinTrackSize.y = static_cast<LONG>(680 * scale);
+
+      // مستوى أكبر أبعاد للتطبيق (Maximum bounds) - 1350x950 px
+      info->ptMaxTrackSize.x = static_cast<LONG>(1350 * scale);
+      info->ptMaxTrackSize.y = static_cast<LONG>(950 * scale);
+      return 0;
+    }
   }
 
   return DefWindowProc(window_handle_, message, wparam, lparam);

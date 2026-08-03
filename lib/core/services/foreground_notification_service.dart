@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geocoding/geocoding.dart';
@@ -21,8 +23,12 @@ class ForegroundNotificationService {
   static const String channelName = 'مواقيت الصلاة المستمرة';
   static const String channelDesc = 'إشعار مستمر يعرض العد التنازلي للصلاة القادمة والموقع الحالي.';
 
+  /// التحقق من أن المنصة تدعم الخدمة الخلفية (أندرويد و iOS فقط)
+  static bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
   /// تهيئة إعدادات الخدمة الخلفية
   static Future<void> init() async {
+    if (!isSupported) return;
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: channelId,
@@ -36,7 +42,7 @@ class ForegroundNotificationService {
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(1000), // تحديث كل ثانية لعرض العد التنازلي بالثواني
+        eventAction: ForegroundTaskEventAction.repeat(1000),
         autoRunOnBoot: true,
         allowWakeLock: true,
         allowWifiLock: true,
@@ -50,7 +56,8 @@ class ForegroundNotificationService {
     required double longitude,
     required String cityName,
   }) async {
-    // حفظ البيانات في SharedPreferences أولاً لتكون متوفرة للـ Isolate الخلفي
+    if (!isSupported) return;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('lat', latitude);
     await prefs.setDouble('lng', longitude);
@@ -60,7 +67,6 @@ class ForegroundNotificationService {
       await stop();
     }
 
-    // حساب النص الأولي للإشعار لتجنب ظهور "جاري حساب المواقيت..." المؤقت
     String initialText = cityName;
     try {
       final now = DateTime.now();
@@ -113,7 +119,6 @@ class ForegroundNotificationService {
       log("Error calculating initial text: $e");
     }
 
-    // بدء الخدمة مع أزرار التحكم والنص الأولي المحسوب بدقة
     await FlutterForegroundTask.startService(
       notificationTitle: 'جاري حساب المواقيت...',
       notificationText: initialText,
@@ -125,8 +130,9 @@ class ForegroundNotificationService {
     );
   }
 
-  /// إيقاف الخدمة الخلفية
+  /// إوقاف الخدمة الخلفية
   static Future<void> stop() async {
+    if (!isSupported) return;
     if (await FlutterForegroundTask.isRunningService) {
       await FlutterForegroundTask.stopService();
     }
@@ -138,6 +144,7 @@ class ForegroundNotificationService {
     double longitude,
     String cityName,
   ) async {
+    if (!isSupported) return;
     try {
       final now = DateTime.now();
       final coordinates = Coordinates(latitude, longitude);
@@ -154,7 +161,6 @@ class ForegroundNotificationService {
         calculationParameters: params,
       );
 
-      // حساب الصلاة القادمة والوقت المتبقي لها
       Prayer nextPrayer = prayerTimes.nextPrayer();
       DateTime nextPrayerTime;
       String nextPrayerNameAr;
@@ -190,12 +196,10 @@ class ForegroundNotificationService {
         countdownText = "حان الآن موعد صلاة $nextPrayerNameAr";
       }
 
-      // حساب التاريخ الهجري
       HijriCalendar.setLocal('ar');
       final hijri = HijriCalendar.now();
       final hijriDateStr = "${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear}";
 
-      // تحديث محتوى الخدمة النشطة
       await FlutterForegroundTask.updateService(
         notificationTitle: "$hijriDateStr | $cityName",
         notificationText: countdownText,
@@ -212,7 +216,6 @@ class NotificationTaskHandler extends TaskHandler {
   double _longitude = 0.0;
   String _cityName = "موقعي الحالي";
 
-  /// تهيئة البيانات عند بدء تشغيل الـ Isolate الخلفي
   Future<void> _loadLocationData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -258,7 +261,6 @@ class NotificationTaskHandler extends TaskHandler {
     FlutterForegroundTask.launchApp();
   }
 
-  /// تحديث الإشعار داخل الـ Isolate الخلفي
   Future<void> _updateNotification() async {
     if (_latitude == 0.0 && _longitude == 0.0) return;
     await ForegroundNotificationService.updateNotificationData(
@@ -268,20 +270,16 @@ class NotificationTaskHandler extends TaskHandler {
     );
   }
 
-  /// جلب وتحديث الموقع من الخلفية تماماً دون فتح التطبيق
   Future<void> _handleBackgroundLocationUpdate() async {
     try {
-      // 1. التحقق من تفعيل خدمات الموقع الجغرافي
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return;
 
-      // 2. التحقق من صلاحيات الموقع
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
         return;
       }
 
-      // 3. جلب الموقع الحالي
       final Position position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
       );
@@ -289,7 +287,6 @@ class NotificationTaskHandler extends TaskHandler {
       _latitude = position.latitude;
       _longitude = position.longitude;
 
-      // 4. حل اسم المدينة جغرافياً بلغة عربية
       try {
         await setLocaleIdentifier('ar');
         List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -307,13 +304,11 @@ class NotificationTaskHandler extends TaskHandler {
         log("Error resolving address in background: $e");
       }
 
-      // 5. حفظ الإحداثيات الجديدة واسم المدينة في الكاش للاستخدام اللاحق
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('lat', _latitude);
       await prefs.setDouble('lng', _longitude);
       await prefs.setString('city_name', _cityName);
 
-      // 6. تحديث الإشعار بالبيانات الجديدة فوراً
       await _updateNotification();
     } catch (e) {
       log("Error performing background location update: $e");
