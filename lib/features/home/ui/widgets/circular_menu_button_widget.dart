@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 
-/// 2. زر القائمة الجانبية الدائري المحاط بشكل ثماني ذهبي متوهج (Circular Menu Button)
+/// 2. زر القائمة الجانبية الدائري المنسق حسب هوية التطبيق عالية التباين (Circular Menu Button)
 class CircularMenuButtonWidget extends StatelessWidget {
   final IconData? icon;
   final String? imagePath;
@@ -29,31 +30,30 @@ class CircularMenuButtonWidget extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.black.withAlpha(76), // 0.3 * 255
+              color: ThemingColors.kIconContainerBackground(context),
               border: Border.all(
-                color: const Color(0xFFD4AF37).withAlpha(204), // 0.8 * 255
-                width: 1.5,
+                color: ThemingColors.kCardBorder(context),
+                width: 1.2,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFD4AF37).withAlpha(51), // 0.2 * 255
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                ),
-              ],
+              boxShadow: ThemingColors.kCardShadow(context),
             ),
             child: icon != null
-                ? Icon(icon, size: length, color: const Color(0xFFE5D2A0))
+                ? Icon(
+                    icon,
+                    size: length,
+                    color: ThemingColors.kIconColor(context),
+                  )
                 : imagePath != null
                 ? Image.asset(
                     imagePath!,
                     width: length,
                     height: length,
                     fit: BoxFit.contain,
+                    color: ThemingColors.kIconColor(context),
                   )
                 : const SizedBox.shrink(),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           label != null
               ? FittedBox(
                   fit: BoxFit.scaleDown,
@@ -61,20 +61,14 @@ class CircularMenuButtonWidget extends StatelessWidget {
                     label!,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: context.setSp(11),
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black,
-                          offset: Offset(1, 1),
-                          blurRadius: 3,
-                        ),
-                      ],
+                      fontSize: context.setSp(12),
+                      color: ThemingColors.kTextMain(context),
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
                     ),
                   ),
                 )
-              : SizedBox(),
+              : const SizedBox.shrink(),
         ],
       ),
     );

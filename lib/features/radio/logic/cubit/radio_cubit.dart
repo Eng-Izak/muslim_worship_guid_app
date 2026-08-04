@@ -147,10 +147,6 @@ class RadioCubit extends Cubit<RadioState> {
           await _audioPlayer.stop();
 
           final List<AudioSource> playlistSources = currentState.stations.map((st) {
-            final String artPath = st.imageUrl.isNotEmpty
-                ? st.imageUrl
-                : 'https://cdns-images.dzcdn.net/images/talk/06b711ac6da4cde0eb698e244f5e27b8/500x500.jpg';
-
             return AudioSource.uri(
               Uri.parse(st.url),
               tag: MediaItem(
@@ -158,7 +154,7 @@ class RadioCubit extends Cubit<RadioState> {
                 album: 'إذاعات القرآن الكريم',
                 title: st.name,
                 artist: 'بث مباشر',
-                artUri: Uri.tryParse(artPath),
+                artUri: Uri.parse('asset:///assets/images/logo.png'),
               ),
             );
           }).toList();

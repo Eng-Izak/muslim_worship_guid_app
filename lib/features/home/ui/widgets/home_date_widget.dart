@@ -37,73 +37,54 @@ class HomeDateWidget extends StatelessWidget {
           alignment: WrapAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: ThemingColors.kPrimary(context).withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8),
+                color: ThemingColors.kDateCardBackground(context),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: ThemingColors.kWarning.withValues(alpha: 0.5),
-                  width: 1.5,
+                  color: ThemingColors.kDateCardBorder(context),
+                  width: 1.0,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: ThemingColors.kCardShadow(context),
               ),
-              child: Row(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // التاريخ الميلادي بالعربية
-                      Text(
-                        '$dayNameAr $day $monthNameAr $year م',
-                        style: TextStyle(
-                          color: ThemingColors.kWarning,
-                          fontSize: context.setSp(18),
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Arial',
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      // التاريخ بالإنجليزية
-                      Text(
-                        formattedEn,
-                        textDirection: TextDirection.ltr,
-                        style: TextStyle(
-                          color: ThemingColors.kAccent(
-                            context,
-                          ).withValues(alpha: 0.8),
-                          fontSize: context.setSp(14),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  // التاريخ الميلادي بالعربية
+                  Text(
+                    '$dayNameAr $day $monthNameAr $year م',
+                    style: TextStyle(
+                      color: ThemingColors.kDateCardTextMain(context),
+                      fontSize: context.setSp(16),
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  // التاريخ بالإنجليزية
+                  Text(
+                    formattedEn,
+                    textDirection: TextDirection.ltr,
+                    style: TextStyle(
+                      color: ThemingColors.kDateCardTextSub(context),
+                      fontSize: context.setSp(13),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: ThemingColors.kPrimary(context).withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8),
+                color: ThemingColors.kDateCardBackground(context),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: ThemingColors.kWarning.withValues(alpha: 0.5),
-                  width: 1.5,
+                  color: ThemingColors.kDateCardBorder(context),
+                  width: 1.0,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: ThemingColors.kCardShadow(context),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -111,12 +92,12 @@ class HomeDateWidget extends StatelessWidget {
                 children: [
                   // التاريخ الهجري بالعربية
                   Text(
-                    ' $dayNameAr $hijriDay $hijriMonth $hijriYear هـ',
+                    '$dayNameAr $hijriDay $hijriMonth $hijriYear هـ',
                     style: TextStyle(
-                      color: ThemingColors.kWarning,
+                      color: ThemingColors.kDateCardTextMain(context),
                       fontSize: context.setSp(16),
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Arial', // أو أي خط عربي مناسب
+                      fontFamily: 'Cairo',
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -125,11 +106,9 @@ class HomeDateWidget extends StatelessWidget {
                     '${hijeiDate.hMonth.toHijriMonthNameEn} ${hijeiDate.hYear} AH',
                     textDirection: TextDirection.ltr,
                     style: TextStyle(
-                      color: ThemingColors.kAccent(
-                        context,
-                      ).withValues(alpha: 0.8),
-                      fontSize: context.setSp(14),
-                      fontWeight: FontWeight.bold,
+                      color: ThemingColors.kDateCardTextSub(context),
+                      fontSize: context.setSp(13),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

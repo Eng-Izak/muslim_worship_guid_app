@@ -18,13 +18,14 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       centerTitle: true,
-      backgroundColor: ThemingColors.kPrimary(context),
+      backgroundColor: ThemingColors.kCardBackground(context),
+      elevation: 0,
       leading: IconButton(
         onPressed: () =>
             Navigator.pushNamed(context, RoutingNames.userSettings.route),
         icon: Icon(
           Icons.settings_rounded,
-          color: ThemingColors.kAccent(context),
+          color: ThemingColors.kIconColor(context),
           size: iconSize,
         ),
       ),
@@ -49,7 +50,7 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: ThemingColors.kAccent(
+                      color: ThemingColors.kIconColor(
                         context,
                       ), // استخدام لون التمييز الذهبي أثناء التحميل
                     ),
@@ -62,7 +63,7 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             return IconButton(
               icon: Icon(
                 Icons.location_on_outlined,
-                color: ThemingColors.kBorderAccent(context),
+                color: ThemingColors.kIconColor(context),
                 size: iconSize,
               ),
               tooltip: 'تحديث الموقع الجغرافي الحالي',

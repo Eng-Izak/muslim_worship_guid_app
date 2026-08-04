@@ -32,22 +32,13 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                 ),
               ),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    ThemingColors.kPrimary(context),
-                    ThemingColors.kPrimaryDark(context),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                color: ThemingColors.kCardBackground(context),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: ThemingColors.kCardBorder(context),
+                  width: 1.2,
                 ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: ThemingColors.kPrimaryDark(context).withAlpha(25),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+                boxShadow: ThemingColors.kCardShadow(context),
               ),
               child: Column(
                 children: [
@@ -57,7 +48,7 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                       Text(
                         state.prayerTimes.nextPrayerTime,
                         style: TextStyle(
-                          color: Color(0xFFD4AF37),
+                          color: ThemingColors.kTextMain(context),
                           fontSize: context.setSp(16),
                           fontWeight: FontWeight.bold,
                         ),
@@ -65,7 +56,7 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                       Text(
                         state.prayerTimes.nextPrayerName,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: ThemingColors.kTextMain(context),
                           fontSize: context.setSp(18),
                           fontWeight: FontWeight.bold,
                         ),
@@ -100,15 +91,10 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                           localRemaining = "$hours:$minutes:$seconds";
 
                           if (currentObj != null) {
-                            final totalDuration = nextObj
-                                .difference(currentObj)
-                                .inSeconds;
-                            final elapsedDuration = now
-                                .difference(currentObj)
-                                .inSeconds;
-                            if (totalDuration > 0) {
-                              localProgress = (elapsedDuration / totalDuration)
-                                  .clamp(0.0, 1.0);
+                            final totalWindow = nextObj.difference(currentObj).inSeconds;
+                            final elapsed = now.difference(currentObj).inSeconds;
+                            if (totalWindow > 0) {
+                              localProgress = (elapsed / totalWindow).clamp(0.0, 1.0);
                             }
                           }
                         } else {
@@ -137,7 +123,7 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                               Text(
                                 localRemaining,
                                 style: TextStyle(
-                                  color: Colors.white70,
+                                  color: ThemingColors.kTextSecondary(context),
                                   fontSize: context.setSp(15),
                                   fontFamily: 'monospace',
                                   fontWeight: FontWeight.bold,
@@ -146,21 +132,21 @@ class TodayTimesUpcomingPrayerCardWidget extends StatelessWidget {
                               Text(
                                 "متبقي على الصلاة",
                                 style: TextStyle(
-                                  color: Colors.white70,
+                                  color: ThemingColors.kTextSecondary(context),
                                   fontSize: context.setSp(14),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: 16),
                           LinearProgressIndicator(
                             value: localProgress,
-                            backgroundColor: Colors.white12,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFFD4AF37),
+                            backgroundColor: ThemingColors.kUnselectedBackground(context),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              ThemingColors.kAccent(context),
                             ),
-                            minHeight: 3,
+                            minHeight: 4,
                           ),
                         ],
                       );

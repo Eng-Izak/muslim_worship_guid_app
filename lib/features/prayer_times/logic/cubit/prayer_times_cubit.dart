@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:bloc/bloc.dart';
@@ -138,7 +140,17 @@ class PrayerCubit extends Cubit<PrayerStates> {
       emit(PrayerSuccessState(prayerModel));
       _scheduleDailyPrayers(prayerTimes);
 
-      // تشغيل وتحديث الخدمة الخلفية للإشعار المستمر
+      // تحديث الإشعار المستمر للصلاة القادمة لنظام الويندوز
+      if (!kIsWeb && Platform.isWindows) {
+        DependencyInjection.getIt<NotificationService>()
+            .updateWindowsPersistentNotification(
+          prayerName: nextPrayerNameAr,
+          prayerTime: formatTime(nextPrayerTime),
+          remainingTime: remainingStr,
+        );
+      }
+
+      // تشغيل وتحديث الخدمة الخلفية للإشعار المستمر للأندرويد
       ForegroundNotificationService.start(
         latitude: _currentCoordinates!.latitude,
         longitude: _currentCoordinates!.longitude,

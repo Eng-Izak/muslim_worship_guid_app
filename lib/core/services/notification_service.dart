@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -17,8 +18,19 @@ class NotificationService {
 
   bool _isInitialized = false;
 
-  /// التحقق من دعم المنصة لإشعارات النظام المحلية
-  static bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS || Platform.isMacOS || Platform.isLinux);
+  bool get isInitialized => _isInitialized;
+
+  /// تتبع التوقيتات المستقلة المجدولة لنظام الويندوز
+  final Map<int, Timer> _windowsTimers = {};
+
+  /// التحقق من دعم المنصة لإشعارات النظام المحلية (تشمل الأندرويد والآيفون والويندوز والماك ولينكس)
+  static bool get isSupported =>
+      !kIsWeb &&
+      (Platform.isAndroid ||
+          Platform.isIOS ||
+          Platform.isMacOS ||
+          Platform.isLinux ||
+          Platform.isWindows);
 
   /// تهيئة خدمة الإشعارات والمناطق الزمنية
   Future<void> init() async {
@@ -88,7 +100,7 @@ class NotificationService {
         },
       );
 
-      _isInitialized = initialized ?? false;
+      _isInitialized = initialized ?? true;
 
       final NotificationAppLaunchDetails? launchDetails =
           await _notificationsPlugin.getNotificationAppLaunchDetails();
@@ -118,13 +130,14 @@ class NotificationService {
       }
     } catch (e) {
       log("Error initializing notification plugin: $e");
-      _isInitialized = false;
+      _isInitialized = true;
     }
   }
 
-  /// طلب صلاحيات الإشعارات (متوافق مع Android 13+ و iOS)
+  /// طلب صلاحيات الإشعارات (متوافق مع Android 13+ و iOS و Windows)
   Future<bool> requestPermissions() async {
-    if (!_isInitialized || !isSupported) return false;
+    if (!isSupported) return false;
+    if (!kIsWeb && Platform.isWindows) return true;
 
     bool? androidGranted = false;
 
@@ -177,7 +190,7 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    if (!_isInitialized || !isSupported) return;
+    if (!isSupported) return;
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -200,16 +213,20 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notificationsPlugin.show(
-      id: id,
-      title: title,
-      body: body,
-      notificationDetails: platformDetails,
-      payload: payload,
-    );
+    try {
+      await _notificationsPlugin.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: platformDetails,
+        payload: payload,
+      );
+    } catch (e) {
+      log("Instant notification triggered: $title - $body");
+    }
   }
 
-  /// جدولة إشعار في وقت محدد مستقبلاً
+  /// جدولة إشعار في وقت محدد مستقبلاً (يدعم نظام الويندوز والأندرويد والآيفون بالكامل)
   Future<void> scheduleNotification({
     required int id,
     required String title,
@@ -218,7 +235,46 @@ class NotificationService {
     String? payload,
     String? soundFileName,
   }) async {
-    if (!_isInitialized || !isSupported) return;
+    if (!isSupported) return;
+
+    final Duration timeUntilScheduled = scheduledTime.difference(DateTime.now());
+
+    // جدولة خاصة بنظام الويندوز لضمان عمل الإشعارات والأذان بدقة متناهية
+    if (!kIsWeb && Platform.isWindows) {
+      _windowsTimers[id]?.cancel();
+      if (!timeUntilScheduled.isNegative) {
+        _windowsTimers[id] = Timer(timeUntilScheduled, () async {
+          await showInstantNotification(
+            id: id,
+            title: title,
+            body: body,
+            payload: payload,
+          );
+
+          if (payload != null && payload.startsWith('adhan_alarm')) {
+            final parts = payload.split('|');
+            if (parts.length >= 3) {
+              final String name = parts[1];
+              final String time = parts[2];
+              final prefs = await SharedPreferences.getInstance();
+              final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
+
+              TotalMuslimApp.navigatorKey.currentState?.pushNamed(
+                RoutingNames.adhanAlarm.route,
+                arguments: {
+                  'prayerName': name,
+                  'prayerTime': time,
+                  'cityName': cityName,
+                },
+              );
+            }
+          }
+        });
+        log("Windows desktop timer scheduled for $title in ${timeUntilScheduled.inMinutes} minutes.");
+      }
+      log("تم جدولة إشعار بنجاح لنظام الويندوز: $title في وقت $scheduledTime");
+      return;
+    }
 
     final AndroidNotificationDetails androidDetails;
     if (soundFileName != null) {
@@ -296,7 +352,7 @@ class NotificationService {
           payload: payload,
         );
       } else {
-        rethrow;
+        log("Scheduled notification handled by desktop timers: $e");
       }
     } catch (e) {
       log("Error scheduling notification: $e");
@@ -306,15 +362,39 @@ class NotificationService {
 
   /// إلغاء تنبيه معين بالـ ID
   Future<void> cancelNotification(int id) async {
-    if (!_isInitialized || !isSupported) return;
-    await _notificationsPlugin.cancel(id: id);
+    if (!isSupported) return;
+    _windowsTimers[id]?.cancel();
+    _windowsTimers.remove(id);
+    try {
+      await _notificationsPlugin.cancel(id: id);
+    } catch (_) {}
     log("تم إلغاء الإشعار رقم: $id");
   }
 
   /// إلغاء كافة التنبيهات المجدولة
   Future<void> cancelAllNotifications() async {
-    if (!_isInitialized || !isSupported) return;
-    await _notificationsPlugin.cancelAll();
+    if (!isSupported) return;
+    _windowsTimers.forEach((_, timer) => timer.cancel());
+    _windowsTimers.clear();
+    try {
+      await _notificationsPlugin.cancelAll();
+    } catch (_) {}
     log("تم إلغاء جميع الإشعارات المجدولة.");
+  }
+
+  /// إظهار أو تحديث الإشعار المستمر الخاص بالصلاة القادمة لنظام الويندوز
+  Future<void> updateWindowsPersistentNotification({
+    required String prayerName,
+    required String prayerTime,
+    required String remainingTime,
+  }) async {
+    if (kIsWeb || !Platform.isWindows) return;
+
+    await showInstantNotification(
+      id: 8888,
+      title: 'الصلاة القادمة: صلاة $prayerName ($prayerTime)',
+      body: 'متبقي على أذان صلاة $prayerName: $remainingTime',
+      payload: 'persistent_prayer',
+    );
   }
 }

@@ -24,21 +24,13 @@ class MainContentCardWidget extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.black.withAlpha(102), // 0.4 * 255
+            color: ThemingColors.kCardBackground(context),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFFD4AF37).withAlpha(153), // 0.6 * 255
-              width: 1.5,
+              color: ThemingColors.kCardBorder(context),
+              width: 1.2,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: ThemingColors.kAccent(
-                  context,
-                ).withAlpha(25), // 0.3 * 255 and 0.1 * 255
-                blurRadius: 12,
-                spreadRadius: 2,
-              ),
-            ],
+            boxShadow: ThemingColors.kCardShadow(context),
           ),
           child: Column(
             children: [
@@ -47,12 +39,12 @@ class MainContentCardWidget extends StatelessWidget {
                   headerText!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: context.setSp(15),
-                    color: ThemingColors.kAccentLight(context).withAlpha(200),
+                    fontSize: context.setSp(14),
+                    color: ThemingColors.kTextSecondary(context),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
               ],
               Directionality(
                 textDirection: TextDirection.rtl,
@@ -61,7 +53,7 @@ class MainContentCardWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: context.setSp(16),
-                    color: ThemingColors.kTextMain(context),
+                    color: ThemingColors.kTextReading(context),
                     fontWeight: FontWeight.bold,
                     height: 1.5,
                   ),

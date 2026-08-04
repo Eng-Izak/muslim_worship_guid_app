@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 
 class AdhanAlarmScreen extends StatefulWidget {
   final String prayerName;
@@ -21,13 +22,12 @@ class AdhanAlarmScreen extends StatefulWidget {
 
 class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
     with SingleTickerProviderStateMixin {
-  late AudioPlayer _audioPlayer;
+  final AudioPlayer _audioPlayer = DependencyInjection.getIt<AudioPlayer>();
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
     
     // إعداد حركة النبض الدائرية حول شعار المسجد
     _animationController = AnimationController(
@@ -41,6 +41,7 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
   /// تشغيل صوت الأذان بناءً على اختيار المستخدم
   Future<void> _playAdhan() async {
     try {
+      await _audioPlayer.stop();
       final settingsBox = Hive.box('settings_box');
       // الحصول على صوت الأذان المختار: 'makkah' أو 'fajr'
       final String adhanVoice = settingsBox.get('adhan_voice', defaultValue: 'makkah');
@@ -89,7 +90,6 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
     _animationController.dispose();
     super.dispose();
   }

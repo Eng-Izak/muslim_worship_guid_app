@@ -34,15 +34,27 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: ThemingColors.kPrimary(context),
+                color: ThemingColors.kHadithContainerBackground(context),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: ThemingColors.kPrimaryDark(context),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
+                border: Border(
+                  right: BorderSide(
+                    color: ThemingColors.kHadithAccentBorder(context),
+                    width: 4.0,
                   ),
-                ],
+                  top: BorderSide(
+                    color: ThemingColors.kCardBorder(context),
+                    width: 1.0,
+                  ),
+                  left: BorderSide(
+                    color: ThemingColors.kCardBorder(context),
+                    width: 1.0,
+                  ),
+                  bottom: BorderSide(
+                    color: ThemingColors.kCardBorder(context),
+                    width: 1.0,
+                  ),
+                ),
+                boxShadow: ThemingColors.kCardShadow(context),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
@@ -55,7 +67,7 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                         horizontal: 16,
                         vertical: 10,
                       ),
-                      color: ThemingColors.kPrimary(context),
+                      color: ThemingColors.kHadithContainerBackground(context),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -65,26 +77,26 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: ThemingColors.kAccent(context),
+                              color: ThemingColors.kHadithTitleText(context).withAlpha(30),
                               borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: ThemingColors.kHadithTitleText(context),
+                                width: 1.0,
+                              ),
                             ),
                             child: Text(
                               "الحديث رقم ${hadith.idInBook}",
                               style: TextStyle(
                                 fontSize: context.setSp(12),
                                 fontWeight: FontWeight.bold,
-                                color: ThemingColors.kScaffoldBackground(
-                                  context,
-                                ),
+                                color: ThemingColors.kHadithTitleText(context),
                               ),
                             ),
                           ),
                           // زر تبديل اللغة الاحترافي بالتطبيق
                           TextButton.icon(
                             style: TextButton.styleFrom(
-                              foregroundColor: ThemingColors.kTextAccent(
-                                context,
-                              ),
+                              foregroundColor: ThemingColors.kHadithTitleText(context),
                             ),
                             onPressed: () {
                               setState(() {
@@ -111,13 +123,13 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                         duration: const Duration(milliseconds: 300),
                         child: isEnglish
                             ? Text(
-                                textAlign: .center,
+                                textAlign: TextAlign.center,
                                 hadith.englishText,
                                 key: ValueKey("en_${hadith.id}"),
                                 style: TextStyle(
-                                  fontSize: context.setSp(20),
-                                  color: ThemingColors.kTextMain(context),
-                                  height: 2,
+                                  fontSize: context.setSp(18),
+                                  color: ThemingColors.kTextReading(context),
+                                  height: 1.8,
                                 ),
                               )
                             : Text(
@@ -126,11 +138,10 @@ class _FortyHadithNawawiInfoViewState extends State<FortyHadithNawawiInfoView> {
                                 textAlign: TextAlign.center,
                                 textDirection: TextDirection.rtl,
                                 style: TextStyle(
-                                  // يفضل توفير خط عثماني أو كايرو عريض
                                   fontSize: context.setSp(20),
                                   fontWeight: FontWeight.w800,
-                                  color: ThemingColors.kTextMain(context),
-                                  height: 2,
+                                  color: ThemingColors.kTextReading(context),
+                                  height: 2.0,
                                 ),
                               ),
                       ),

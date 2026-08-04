@@ -47,68 +47,79 @@ class TotalMuslimApp extends StatelessWidget {
                 child: MaterialApp(
                   navigatorKey: TotalMuslimApp.navigatorKey,
                   debugShowCheckedModeBanner: false,
-                  locale: settingsState.locale,
+                  locale: const Locale('ar'),
                   localizationsDelegates: const [
                     AppLocalizations.delegate,
                     GlobalMaterialLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                   ],
-                  supportedLocales: const [Locale('ar'), Locale('en')],
+                  supportedLocales: const [Locale('ar')],
                   builder: (context, child) {
-                    final isArabic = settingsState.locale.languageCode == 'ar';
                     return Directionality(
-                      textDirection: isArabic
-                          ? TextDirection.rtl
-                          : TextDirection.ltr,
+                      textDirection: TextDirection.rtl,
                       child: child!,
                     );
                   },
                   theme: ThemeData.light(useMaterial3: true).copyWith(
+                    scaffoldBackgroundColor: const Color(0xFFF9F8F3),
                     colorScheme: const ColorScheme.light(
-                      primary: Color(0xFF3A7D5C),
+                      primary: Color(0xFF0D4F3C),
                       onPrimary: Color(0xFFFFFFFF),
-                      primaryContainer: Color(0xFF2D5A3F),
-                      onPrimaryContainer: Color(0xFFFFFFFF),
-                      secondary: Color(0xFFB8860B),
-                      onSecondary: Color(0xFFFFFFFF),
-                      secondaryContainer: Color(0xFFD4A017),
-                      onSecondaryContainer: Color(0xFF1A1A2E),
-                      surface: Color(0xFFF5F0E8),
-                      onSurface: Color(0xFF1A1A2E),
-                      surfaceContainerHighest: Color(0xFFFFFFFF),
-                      onSurfaceVariant: Color(0xFF6B7280),
+                      secondary: Color(0xFFD4A359),
+                      onSecondary: Color(0xFF0D4F3C),
+                      surface: Color(0xFFFFFFFF),
+                      onSurface: Color(0xFF0D4F3C),
+                      surfaceContainerHighest: Color(0xFFEEF5F0),
+                      onSurfaceVariant: Color(0xFF4A5D55),
+                      outline: Color(0xFFD8E3DC),
                       error: Color(0xFFD32F2F),
                       onError: Color(0xFFFFFFFF),
                     ),
-                    scaffoldBackgroundColor: const Color(0xFFF5F0E8),
+                    cardTheme: CardThemeData(
+                      color: const Color(0xFFFFFFFF),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(color: Color(0xFFD8E3DC), width: 1.2),
+                      ),
+                    ),
                     textTheme:
                         _getSafeTextTheme(
                           settingsState.fontFamily,
                           ThemeData.light().textTheme,
                         ).apply(
-                          bodyColor: const Color(0xFF1A1A2E),
-                          displayColor: const Color(0xFF1A1A2E),
+                          bodyColor: const Color(0xFF0D4F3C),
+                          displayColor: const Color(0xFF0D4F3C),
                         ),
                   ),
                   darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+                    scaffoldBackgroundColor: const Color(0xFF0D4F3C),
                     colorScheme: const ColorScheme.dark(
-                      primary: Color(0xFF215443),
+                      primary: Color(0xFF153E32),
                       onPrimary: Color(0xFFE0E0E0),
-                      primaryContainer: Color(0xFF122E26),
+                      primaryContainer: Color(0xFF153E32),
                       onPrimaryContainer: Color(0xFFE0E0E0),
-                      secondary: Color(0xFFC5A85A),
-                      onSecondary: Color(0xFF1A1A2E),
-                      secondaryContainer: Color(0xFFFFEB3B),
-                      onSecondaryContainer: Color(0xFF122E26),
-                      surface: Color(0xFF173B30),
+                      secondary: Color(0xFFD4A359),
+                      onSecondary: Color(0xFF0D4F3C),
+                      secondaryContainer: Color(0xFFD4A359),
+                      onSecondaryContainer: Color(0xFF0D4F3C),
+                      surface: Color(0xFF153E32),
                       onSurface: Color(0xFFE0E0E0),
-                      surfaceContainerHighest: Color(0x33000000),
+                      surfaceContainerHighest: Color(0xFF1C4537),
                       onSurfaceVariant: Color(0xFF9E9E9E),
+                      outline: Color(0xFF2E6E56),
                       error: Color(0xFFD32F2F),
                       onError: Color(0xFFFFFFFF),
                     ),
-                    scaffoldBackgroundColor: const Color(0xFF173B30),
+                    cardTheme: CardThemeData(
+                      color: const Color(0xFF153E32),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(color: Color(0xFF2E6E56), width: 1.2),
+                      ),
+                    ),
                     textTheme:
                         _getSafeTextTheme(
                           settingsState.fontFamily,

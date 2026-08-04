@@ -212,10 +212,6 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
 
           await _audioPlayer.stop();
 
-          final String defaultArt = (reciterImg != null && reciterImg.isNotEmpty)
-              ? reciterImg
-              : 'https://cdns-images.dzcdn.net/images/talk/06b711ac6da4cde0eb698e244f5e27b8/500x500.jpg';
-
           final int reciterIntId = int.tryParse(reciterId) ?? 1;
           final String reciterNameAr = reciterIntId.reciterNameAr;
 
@@ -238,7 +234,7 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
                   album: 'القرآن الكريم',
                   title: sName.startsWith('سُورَةُ') ? sName : 'سُورَةُ $sName',
                   artist: reciterNameAr,
-                  artUri: Uri.tryParse(defaultArt),
+                  artUri: Uri.parse('asset:///assets/images/logo.png'),
                 ),
               ),
             );

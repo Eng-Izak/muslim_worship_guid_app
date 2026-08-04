@@ -48,11 +48,9 @@ class HomeScreen extends StatelessWidget {
               );
             }
           },
-          child: Opacity(
-            opacity: 0.8,
-            child: Scaffold(
-              appBar: const HomeAppBarWidget(),
-              backgroundColor: ThemingColors.kPrimary(context),
+          child: Scaffold(
+            appBar: const HomeAppBarWidget(),
+            backgroundColor: ThemingColors.kScaffoldBackground(context),
               body: SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -146,7 +144,6 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),
         ),
       ],
     );

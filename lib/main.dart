@@ -14,6 +14,16 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 
+class WindowsWindowListener extends WindowListener {
+  @override
+  void onWindowClose() async {
+    final bool isPreventClose = await windowManager.isPreventClose();
+    if (isPreventClose) {
+      await windowManager.hide();
+    }
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
@@ -51,7 +61,7 @@ void main() async {
 
   runApp(const TotalMuslimApp());
 
-  // تطبيق حدود وتأطير النافذة بعد تشغيل runApp
+  // تطبيق حدود وتأطير النافذة وإبقائها شغالاً بالخلفية 24/7 بعد الإغلاق
   if (!kIsWeb && Platform.isWindows) {
     try {
       const WindowOptions windowOptions = WindowOptions(
@@ -63,6 +73,8 @@ void main() async {
         title: 'دليل عبادات المسلم',
       );
       windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.setPreventClose(true);
+        windowManager.addListener(WindowsWindowListener());
         await windowManager.show();
         await windowManager.focus();
       });

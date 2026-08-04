@@ -31,9 +31,9 @@ class QiblaScreen extends StatelessWidget {
         children: [
           const BackgroundImageWidget(),
           Scaffold(
-            backgroundColor: ThemingColors.kPrimary(context).withAlpha(220),
+            backgroundColor: ThemingColors.kScaffoldBackground(context),
             appBar: AppBar(
-              backgroundColor: ThemingColors.kPrimary(context).withAlpha(220),
+              backgroundColor: ThemingColors.kCardBackground(context),
               elevation: 0,
               title: Text(
                 "اتجاه القبلة",

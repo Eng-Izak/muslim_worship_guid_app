@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -9,20 +8,13 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   // قيم افتراضية ثابتة للتطبيق في حال لم يغيرها المستخدم بعد
   static const String _defaultLang = 'ar';
-  static const String _defaultFontFamily =
-      'Cairo'; // خطك الإسلامي الأساسي الفاخر
+  static const String _defaultFontFamily = 'Amiri';
   static const double _defaultFontScale = 1.0;
-
-  /// استنتاج اللغة الافتراضية من لغة الجهاز عند أول تشغيل
-  static String get _systemDefaultLang {
-    final String deviceLang = Platform.localeName.split('_').first.toLowerCase();
-    return (deviceLang == 'en') ? 'en' : 'ar';
-  }
 
   SettingsCubit()
     : super(
         SettingsState(
-          locale: const Locale(_defaultLang), // سيُحدَّث فوراً في _loadSavedSettings باللغة الحقيقية
+          locale: const Locale(_defaultLang),
           fontFamily: _defaultFontFamily,
           fontScale: _defaultFontScale,
         ),
@@ -32,12 +24,12 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// تحميل كافة الإعدادات المخزنة من الـ Hive عند تهيئة الكيوبت
   void _loadSavedSettings() {
-    // إذا لم يختر المستخدم لغة من قبل، نستخدم لغة الجهاز تلقائياً
-    final String lang =
-        _settingsBox.get('language_code', defaultValue: _systemDefaultLang) as String;
-    final String font =
+    String font =
         _settingsBox.get('font_family', defaultValue: _defaultFontFamily)
             as String;
+    if (font != 'Amiri' && font != 'Lateef') {
+      font = 'Amiri';
+    }
     final double scale = double.parse(
       _settingsBox
           .get('font_scale', defaultValue: _defaultFontScale)
@@ -45,7 +37,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     );
 
     emit(
-      SettingsState(locale: Locale(lang), fontFamily: font, fontScale: scale),
+      SettingsState(locale: const Locale('ar'), fontFamily: font, fontScale: scale),
     );
   }
 
