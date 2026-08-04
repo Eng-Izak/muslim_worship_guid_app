@@ -12,7 +12,7 @@ class MedlePublicInformationMenuWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // حساب حجم الساعة بمرونة بحيث تناسب الشاشة دون أي تداخل مع كارت الحديث
-    final double clockSize = (context.screenWidth * 0.22).clamp(85.0, 130.0);
+    final double clockSize = (context.screenWidth * 0.3).clamp(85.0, 130.0);
 
     return Expanded(
       flex: 2,
@@ -24,9 +24,9 @@ class MedlePublicInformationMenuWidget extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 40),
                   AnalogClockWidget(size: clockSize),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 40),
                   MainContentCardWidget(
                     title: 'Snippet',
                     headerText: Localization.tr(

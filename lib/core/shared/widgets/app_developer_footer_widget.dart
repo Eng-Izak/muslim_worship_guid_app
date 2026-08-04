@@ -25,7 +25,7 @@ class AppDeveloperFooterWidget extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // الجزء الأيسر: الشعار والنص الإنجليزي
                     Column(
@@ -61,11 +61,11 @@ class AppDeveloperFooterWidget extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 40),
 
                     Image.asset("assets/images/logo.png", height: logoHeight),
 
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 40),
 
                     // الجزء الأيمن: النص العربي
                     Column(

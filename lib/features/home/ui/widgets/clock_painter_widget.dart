@@ -35,24 +35,24 @@ class ClockPainter extends CustomPainter {
     final double hoursAngle =
         ((dateTime.hour % 12 * 30) + (dateTime.minute * 0.5)) * pi / 180;
 
-    // [3] إعدادات رسم العقارب بخطوط مذهبة وزيتونية فاخرة متناسقة
+    // [3] إعدادات رسم العقارب باللون الداكن مع عقرب الثواني الأصفر المذهب
     final Paint hourPaint = Paint()
-      ..color = const Color(0xFFF7E7CE)
+      ..color = const Color(0xFF1E3A2F) // عقرب الساعات داكن
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = (radius * 0.06).clamp(2.5, 4.5);
+      ..strokeWidth = (radius * 0.075).clamp(3.0, 5.0);
 
     final Paint minutePaint = Paint()
-      ..color = const Color(0xFFD4AF37)
+      ..color = const Color(0xFF1E3A2F) // عقرب الدقائق داكن
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = (radius * 0.045).clamp(1.8, 3.5);
+      ..strokeWidth = (radius * 0.05).clamp(2.0, 3.8);
 
     final Paint secondPaint = Paint()
-      ..color = const Color(0xFFE53935) // أحمر ياقوتي رفيع لعقرب الثواني
+      ..color = const Color(0xFFEAB308) // عقرب الثواني أصفر براق
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = (radius * 0.025).clamp(1.0, 2.0);
+      ..strokeWidth = (radius * 0.03).clamp(1.2, 2.2);
 
     // [4] رسم عقرب الساعات
     final double hourHandLength = radius * 0.42;

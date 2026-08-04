@@ -17,7 +17,11 @@ class RightFeaturesMenuWidget extends StatelessWidget {
           children: [
             CircularMenuButtonWidget(
               icon: Icons.menu_book_rounded,
-              label: Localization.tr(context, ar: 'القرآن الكريم', en: 'Quran Study'),
+              label: Localization.tr(
+                context,
+                ar: 'القرآن الكريم',
+                en: 'Quran Study',
+              ),
               onTap: () {
                 Navigator.pushNamed(context, RoutingNames.quran.route);
               },
@@ -33,7 +37,11 @@ class RightFeaturesMenuWidget extends StatelessWidget {
             SizedBox(height: context.heightPct(0.04)),
             CircularMenuButtonWidget(
               imagePath: 'assets/images/qibla_image.png',
-              label: Localization.tr(context, ar: 'اتجاه القبلة', en: 'Qibla Direction'),
+              label: Localization.tr(
+                context,
+                ar: 'اتجاه القبلة',
+                en: 'Qibla Direction',
+              ),
               onTap: () {
                 Navigator.pushNamed(context, RoutingNames.qibla.route);
               },

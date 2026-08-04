@@ -45,16 +45,21 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
       height: clockSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF1C4537), // خلفية زيتونية راقية متناسقة مع الهوية البصرية
+        color: const Color(0xFFF3F2EA), // قرص أبيض عاجي كريمي مطابق تماماً للصورة المرجعية
         border: Border.all(
-          color: const Color(0xFFD4AF37), // إطار مذهب فاخر
-          width: (clockSize * 0.025).clamp(1.5, 3.5),
+          color: const Color(0xFFE5D562), // إطار أصفر مذهب
+          width: (clockSize * 0.03).clamp(2.0, 4.0),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD4AF37).withAlpha(60),
-            blurRadius: 10,
-            spreadRadius: 1,
+            color: const Color(0xFFF7E665).withAlpha(220), // الهالة الصفراء المضيئة حول الساعة
+            blurRadius: 18,
+            spreadRadius: 4,
+          ),
+          BoxShadow(
+            color: Colors.black.withAlpha(50),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -65,7 +70,7 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
           Positioned.fill(
             child: CustomPaint(painter: ClockPainter(_currentTime)),
           ),
-          // 2. كتابة الأرقام من 1 إلى 12 وتوزيعها بشكل دائري متناسق وبحجم مرن محمي من التداخل
+          // 2. كتابة الأرقام من 1 إلى 12 باللون الرمادي الداكن المنسق
           ...List.generate(12, (index) {
             final int hour = index == 0 ? 12 : index;
             final double angle = (index * 30 - 90) * pi / 180;
@@ -80,7 +85,7 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
                 style: TextStyle(
                   fontSize: numberFontSize,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFFE5D2A0),
+                  color: const Color(0xFF64748B), // أرقام داكنة واضحة ومقروءة على القرص الأبيض
                 ),
               ),
             );

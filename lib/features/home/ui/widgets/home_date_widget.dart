@@ -12,103 +12,115 @@ class HomeDateWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final DateTime date = DateTime.now();
 
-    // تنسيق التاريخ بالعربية
+    // تنسيق التاريخ الميلادي بالعربية والإنجليزية
     final String dayNameAr = date.weekday.toDayNameAr;
     final String day = date.day.toString();
     final String monthNameAr = date.month.toGregorianMonthNameAr;
     final String year = date.year.toString();
-
-    // تنسيق التاريخ بالإنجليزية
     final String formattedEn = DateFormat('dd MMMM yyyy').format(date);
-    final HijriCalendar hijeiDate = HijriCalendar.now();
 
-    // تنسيق التاريخ الهجري
-    final String hijriDay = hijeiDate.hDay.toString();
-    final String hijriMonth = hijeiDate.hMonth.toHijriMonthNameAr;
-    final String hijriYear = hijeiDate.hYear.toString();
+    // تنسيق التاريخ الهجري بالعربية والإنجليزية
+    final HijriCalendar hijriDate = HijriCalendar.now();
+    final String hijriDay = hijriDate.hDay.toString();
+    final String hijriMonth = hijriDate.hMonth.toHijriMonthNameAr;
+    final String hijriYear = hijriDate.hYear.toString();
+    final String hijriMonthEn = hijriDate.hMonth.toHijriMonthNameEn;
 
     return Center(
-      heightFactor: 1.0,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 450),
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 10,
-          alignment: WrapAlignment.center,
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // 1. بطاقة التاريخ الميلادي
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: ThemingColors.kDateCardBackground(context),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: ThemingColors.kDateCardBorder(context),
-                  width: 1.0,
+                  width: 1.2,
                 ),
                 boxShadow: ThemingColors.kCardShadow(context),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // التاريخ الميلادي بالعربية
-                  Text(
-                    '$dayNameAr $day $monthNameAr $year م',
-                    style: TextStyle(
-                      color: ThemingColors.kDateCardTextMain(context),
-                      fontSize: context.setSp(16),
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '$dayNameAr $day $monthNameAr $year م',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: ThemingColors.kDateCardTextMain(context),
+                        fontSize: context.setSp(15),
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  // التاريخ بالإنجليزية
-                  Text(
-                    formattedEn,
-                    textDirection: TextDirection.ltr,
-                    style: TextStyle(
-                      color: ThemingColors.kDateCardTextSub(context),
-                      fontSize: context.setSp(13),
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 3),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      formattedEn,
+                      textAlign: TextAlign.center,
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(
+                        color: ThemingColors.kDateCardTextSub(context),
+                        fontSize: context.setSp(12),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 10),
+            // 2. بطاقة التاريخ الهجري
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: ThemingColors.kDateCardBackground(context),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: ThemingColors.kDateCardBorder(context),
-                  width: 1.0,
+                  width: 1.2,
                 ),
                 boxShadow: ThemingColors.kCardShadow(context),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // التاريخ الهجري بالعربية
-                  Text(
-                    '$dayNameAr $hijriDay $hijriMonth $hijriYear هـ',
-                    style: TextStyle(
-                      color: ThemingColors.kDateCardTextMain(context),
-                      fontSize: context.setSp(16),
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '$dayNameAr $hijriDay $hijriMonth $hijriYear هـ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: ThemingColors.kDateCardTextMain(context),
+                        fontSize: context.setSp(15),
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  // التاريخ بالإنجليزية
-                  Text(
-                    '${hijeiDate.hMonth.toHijriMonthNameEn} ${hijeiDate.hYear} AH',
-                    textDirection: TextDirection.ltr,
-                    style: TextStyle(
-                      color: ThemingColors.kDateCardTextSub(context),
-                      fontSize: context.setSp(13),
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 3),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '$hijriMonthEn $hijriYear AH',
+                      textAlign: TextAlign.center,
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(
+                        color: ThemingColors.kDateCardTextSub(context),
+                        fontSize: context.setSp(12),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
