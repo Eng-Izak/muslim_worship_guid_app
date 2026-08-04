@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/app_developer_footer_widget.dart';
 import 'package:prayer_times_quran_azkar_app/features/azkar/logic/cubit/azkar_cubit.dart';
 import 'package:prayer_times_quran_azkar_app/features/azkar/ui/widgets/zekr_card_widget.dart';
@@ -17,17 +18,26 @@ class AzkarScreen extends StatelessWidget {
           0xFF1C4537,
         ), // الهوية البصرية الزيتونية الفاخرة للتطبيق
         appBar: AppBar(
-          backgroundColor: const Color(0xFF215443),
+          backgroundColor: ThemingColors.kCardBackground(context),
           elevation: 0,
+          automaticallyImplyLeading: false,
           title: Text(
             "حصن المسلم (الأذكار)",
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFFC5A85A),
+              color: ThemingColors.kIconColor(context),
             ),
           ),
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Color(0xFFC5A85A)),
+          actions: [
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(
+                Icons.arrow_forward_rounded,
+                color: ThemingColors.kIconColor(context),
+              ),
+            ),
+          ],
         ),
         body: BlocBuilder<AzkarCubit, AzkarState>(
           builder: (context, state) {

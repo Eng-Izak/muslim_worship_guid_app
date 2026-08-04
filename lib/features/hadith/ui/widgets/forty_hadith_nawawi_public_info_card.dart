@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/features/hadith/data/models/hadith_model.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 
@@ -13,29 +14,30 @@ class FortyHadithNawawiPublicInfoCard extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF215443),
+        color: ThemingColors.kCardBackground(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFC5A85A).withAlpha(100),
-          width: 1.5,
+          color: ThemingColors.kCardBorder(context),
+          width: 1.2,
         ),
+        boxShadow: ThemingColors.kCardShadow(context),
       ),
       child: Column(
         children: [
           Text(
             book.title,
             style: TextStyle(
-              fontSize: context.setSp(24),
+              fontSize: context.setSp(22),
               fontWeight: FontWeight.bold,
-              color: Color(0xFFC5A85A),
+              color: ThemingColors.kIconColor(context),
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
             "جامع ومصنف: ${book.author}",
             style: TextStyle(
               fontSize: context.setSp(14),
-              color: Colors.white70,
+              color: ThemingColors.kTextSecondary(context),
             ),
           ),
         ],

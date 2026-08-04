@@ -35,6 +35,7 @@ class QiblaScreen extends StatelessWidget {
             appBar: AppBar(
               backgroundColor: ThemingColors.kCardBackground(context),
               elevation: 0,
+              automaticallyImplyLeading: false,
               title: Text(
                 "اتجاه القبلة",
                 style: TextStyle(
@@ -43,9 +44,15 @@ class QiblaScreen extends StatelessWidget {
                 ),
               ),
               centerTitle: true,
-              iconTheme: IconThemeData(
-                color: ThemingColors.kIconColor(context),
-              ),
+              actions: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: ThemingColors.kIconColor(context),
+                  ),
+                ),
+              ],
             ),
             body: BlocBuilder<QiblaCubit, QiblaState>(
               builder: (context, state) {

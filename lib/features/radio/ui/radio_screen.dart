@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/app_developer_footer_widget.dart';
 import 'package:prayer_times_quran_azkar_app/features/radio/logic/cubit/radio_cubit.dart';
 import 'widgets/radio_station_card_widget.dart';
@@ -14,17 +15,26 @@ class RadioScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: const Color(0xFF1C4537),
         appBar: AppBar(
-          backgroundColor: const Color(0xFF215443),
+          backgroundColor: ThemingColors.kCardBackground(context),
           elevation: 0,
-          title: const Text(
+          automaticallyImplyLeading: false,
+          title: Text(
             "إذاعات القرآن الكريم",
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFFC5A85A),
+              color: ThemingColors.kIconColor(context),
             ),
           ),
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Color(0xFFC5A85A)),
+          actions: [
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(
+                Icons.arrow_forward_rounded,
+                color: ThemingColors.kIconColor(context),
+              ),
+            ),
+          ],
         ),
         body: BlocBuilder<RadioCubit, RadioState>(
           builder: (context, state) {

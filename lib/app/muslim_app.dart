@@ -18,6 +18,12 @@ class TotalMuslimApp extends StatelessWidget {
 
   TextTheme _getSafeTextTheme(String fontFamily, TextTheme baseTextTheme) {
     try {
+      if (fontFamily == 'Amiri') {
+        return GoogleFonts.amiriTextTheme(baseTextTheme);
+      }
+      if (fontFamily == 'Lateef') {
+        return GoogleFonts.lateefTextTheme(baseTextTheme);
+      }
       return GoogleFonts.getTextTheme(fontFamily, baseTextTheme);
     } catch (e) {
       debugPrint("⚠️ GoogleFonts.getTextTheme fallback triggered for $fontFamily: $e");

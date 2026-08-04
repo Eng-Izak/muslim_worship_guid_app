@@ -23,8 +23,9 @@ class UserSettingsScreen extends StatelessWidget {
             context,
           ).withAlpha(220), // شفافية متناغمة فوق الخلفية
           appBar: AppBar(
-            backgroundColor: ThemingColors.kPrimary(context),
+            backgroundColor: ThemingColors.kCardBackground(context),
             elevation: 0,
+            automaticallyImplyLeading: false,
             title: Text(
               Localization.tr(
                 context,
@@ -34,11 +35,19 @@ class UserSettingsScreen extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontWeight: FontWeight.bold,
-                color: ThemingColors.kAccent(context),
+                color: ThemingColors.kIconColor(context),
               ),
             ),
             centerTitle: true,
-            iconTheme: IconThemeData(color: ThemingColors.kAccent(context)),
+            actions: [
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(
+                  Icons.arrow_forward_rounded,
+                  color: ThemingColors.kIconColor(context),
+                ),
+              ),
+            ],
           ),
           body: ListView(
             physics: const BouncingScrollPhysics(),

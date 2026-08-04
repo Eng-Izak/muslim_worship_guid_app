@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 
 class PrayerTimesAppBarWidget extends StatelessWidget
     implements PreferredSizeWidget {
@@ -9,28 +10,35 @@ class PrayerTimesAppBarWidget extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.green.withAlpha(50),
+      backgroundColor: ThemingColors.kCardBackground(context),
+      elevation: 0,
+      automaticallyImplyLeading: false,
       title: Text(
         "مواقيت الصلاة",
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: ThemingColors.kIconColor(context),
+        ),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_forward_rounded,
+            color: ThemingColors.kIconColor(context),
+          ),
+        ),
+      ],
       bottom: TabBar(
-        indicatorColor: const Color(0xFFD4AF37),
-        labelColor: const Color(0xFFD4AF37),
-        dividerColor: Colors.black,
-        unselectedLabelColor: Colors.white,
+        indicatorColor: ThemingColors.kHadithAccentBorder(context),
+        labelColor: ThemingColors.kIconColor(context),
+        unselectedLabelColor: ThemingColors.kTextSecondary(context),
         onTap: onTabChanged, // إرسال رقم التبويب مباشرة للكيوبت
         tabs: const [
           Tab(icon: Icon(Icons.today), text: "مواقيت اليوم"),
           Tab(icon: Icon(Icons.calendar_month), text: "الشهر الهجري"),
         ],
-      ),
-      leading: IconButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        icon: Icon(Icons.arrow_back_ios_outlined, color: Colors.white),
       ),
     );
   }

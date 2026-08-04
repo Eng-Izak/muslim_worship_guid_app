@@ -46,7 +46,9 @@ class ThemingColors {
   // Primary Text (Titles & Headings): Deep Emerald Green #0D4F3C
   static Color kTextMain(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFFE0E0E0) : const Color(0xFF0D4F3C);
+    return isDark
+        ? const Color(0xFFE0E0E0)
+        : const Color.fromARGB(255, 4, 27, 20);
   }
 
   // Secondary Text (Subtitles/Labels): Dark Charcoal Green #2C3E35 / Soft Slate #4A5D55
@@ -55,10 +57,10 @@ class ThemingColors {
     return isDark ? const Color(0xFF9E9E9E) : const Color(0xFF4A5D55);
   }
 
-  // Hadith / Ayah Text: Deep Blackish Green #0A2E23
+  // Hadith / Ayah Text: Deep Blackish Green #0A2E23 in Light, Pure White #FFFFFF in Dark
   static Color kTextReading(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFFF0F0F0) : const Color(0xFF0A2E23);
+    return isDark ? const Color(0xFFFFFFFF) : const Color(0xFF0A2E23);
   }
 
   // 4. Iconography & Badges
@@ -120,7 +122,9 @@ class ThemingColors {
 
   static Color kSpecialContainerBorder(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFFD4A359).withAlpha(128) : const Color(0xFFD8E3DC);
+    return isDark
+        ? const Color(0xFFD4A359).withAlpha(128)
+        : const Color(0xFFD8E3DC);
   }
 
   static Color kSpecialContainerText(BuildContext context) {

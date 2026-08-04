@@ -34,22 +34,26 @@ class SurahDetailsScreen extends StatelessWidget {
                   context,
                 ).withAlpha(200),
                 appBar: AppBar(
-                  leading: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.arrow_back_ios_new),
-                    color: ThemingColors.kTextMain(context),
-                  ),
-                  backgroundColor: ThemingColors.kPrimaryDark(
-                    context,
-                  ).withAlpha(200),
+                  backgroundColor: ThemingColors.kCardBackground(context),
+                  elevation: 0,
+                  automaticallyImplyLeading: false,
                   title: Text(
                     surah.name,
                     style: TextStyle(
-                      color: ThemingColors.kTextMain(context),
+                      color: ThemingColors.kIconColor(context),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   centerTitle: true,
+                  actions: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.arrow_forward_rounded,
+                        color: ThemingColors.kIconColor(context),
+                      ),
+                    ),
+                  ],
                   bottom: TabBar(
                     tabs: [
                       Tab(
@@ -60,7 +64,7 @@ class SurahDetailsScreen extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.menu_book_rounded,
-                                color: ThemingColors.kWarning,
+                                color: ThemingColors.kSuccess,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -84,7 +88,7 @@ class SurahDetailsScreen extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.audiotrack_rounded,
-                                color: ThemingColors.kWarning,
+                                color: ThemingColors.kSuccess,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),

@@ -23,23 +23,26 @@ class QuranScreen extends StatelessWidget {
             child: Scaffold(
               backgroundColor: ThemingColors.kPrimary(context),
               appBar: AppBar(
-                backgroundColor: ThemingColors.kPrimary(context),
-                leading: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(
-                    Icons.arrow_back_ios_new,
-                    color: ThemingColors.kWarning,
-                  ),
-                ),
+                backgroundColor: ThemingColors.kCardBackground(context),
+                elevation: 0,
+                automaticallyImplyLeading: false,
                 title: Text(
                   'فهرس السور',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: ThemingColors.kWarning,
+                    color: ThemingColors.kIconColor(context),
                   ),
                 ),
                 centerTitle: true,
-                elevation: 0,
+                actions: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(
+                      Icons.arrow_forward_rounded,
+                      color: ThemingColors.kIconColor(context),
+                    ),
+                  ),
+                ],
               ),
               body: BlocBuilder<QuranCubit, QuranState>(
                 builder: (context, state) {

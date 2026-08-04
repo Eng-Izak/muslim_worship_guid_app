@@ -4,42 +4,49 @@ import 'package:prayer_times_quran_azkar_app/core/shared/widgets/app_developer_f
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/background_image_widget.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/features/hadith/logic/cubit/hadith_cubit.dart';
-import 'package:prayer_times_quran_azkar_app/features/hadith/ui/widgets/forty_hadith_nawawi_info_view.dart'; // ألوان هويتك البصرية
+import 'package:prayer_times_quran_azkar_app/features/hadith/ui/widgets/forty_hadith_nawawi_info_view.dart';
 
 class HadisScreen extends StatelessWidget {
   const HadisScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // 1. صورة الخلفية للمسجد
-        const BackgroundImageWidget(),
-        Opacity(
-          opacity: 0.8,
-          child: Scaffold(
-            backgroundColor: ThemingColors.kPrimary(
-              context,
-            ), // تدرج زيتوني أعمق لراحة العين
+    return BlocProvider(
+      create: (context) => HadithCubit()..loadNawawiHadiths(),
+      child: Stack(
+        children: [
+          // 1. صورة الخلفية للمسجد
+          const BackgroundImageWidget(),
+          Scaffold(
+            backgroundColor: ThemingColors.kScaffoldBackground(context),
             appBar: AppBar(
-              backgroundColor: ThemingColors.kPrimary(context),
+              backgroundColor: ThemingColors.kCardBackground(context),
               elevation: 0,
+              automaticallyImplyLeading: false,
               title: Text(
                 "الأحاديث النبوية",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: ThemingColors.kAccent(context),
+                  color: ThemingColors.kIconColor(context),
                 ),
               ),
               centerTitle: true,
-              iconTheme: IconThemeData(color: ThemingColors.kAccent(context)),
+              actions: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: ThemingColors.kIconColor(context),
+                  ),
+                ),
+              ],
             ),
             body: BlocBuilder<HadithCubit, HadithState>(
               builder: (context, state) {
                 if (state is HadithLoading) {
                   return Center(
                     child: CircularProgressIndicator(
-                      color: ThemingColors.kAccent(context),
+                      color: ThemingColors.kIconColor(context),
                     ),
                   );
                 } else if (state is HadithLoaded) {
@@ -57,8 +64,8 @@ class HadisScreen extends StatelessWidget {
             ),
             bottomNavigationBar: const AppDeveloperFooterWidget(),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
