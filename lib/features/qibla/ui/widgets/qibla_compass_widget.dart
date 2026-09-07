@@ -39,18 +39,23 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget> {
         (MagnetometerEvent event) {
           if (!mounted) return;
 
-          // حساب زاوية اتجاه الشمال المغناطيسي من قراءتي الحساس (X و Y)
-          double rawHeading = (atan2(event.y, event.x) * 180.0 / pi);
+          // حساب زاوية اتجاه الشمال المغناطيسي الدقيق عند وضع الهاتف بشكل أفقي (atan2(x, y))
+          double rawHeading = (atan2(event.x, event.y) * 180.0 / pi);
           rawHeading = (rawHeading + 360.0) % 360.0;
 
           setState(() {
-            _heading = rawHeading;
+            // مرشح التنعيم السلس (Low-Pass Filter) لحركة البوصلة بسلاسة وبدون اهتزاز على الهواتف الحقيقية
+            double diff = rawHeading - _heading;
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            _heading = (_heading + diff * 0.25) % 360.0;
+            if (_heading < 0) _heading += 360.0;
           });
         },
         onError: (error) {
           debugPrint("Magnetometer stream error: $error");
         },
-        cancelOnError: true,
+        cancelOnError: false,
       );
     } catch (e) {
       debugPrint("Magnetometer listener initialization skipped: $e");

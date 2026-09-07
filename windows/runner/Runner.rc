@@ -92,9 +92,9 @@ BEGIN
             VALUE "CompanyName", "MuslimWorshipGuid" "\0"
             VALUE "FileDescription", "Muslim Worship Guid App" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "chat_app" "\0"
+            VALUE "InternalName", "muslim_worship_guid_app" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 MuslimWorshipGuid. All rights reserved." "\0"
-            VALUE "OriginalFilename", "chat_app.exe" "\0"
+            VALUE "OriginalFilename", "muslim_worship_guid_app.exe" "\0"
             VALUE "ProductName", "MuslimWorshipGuid" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END

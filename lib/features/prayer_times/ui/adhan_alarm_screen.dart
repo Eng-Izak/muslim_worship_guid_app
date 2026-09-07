@@ -51,7 +51,16 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
         audioPath = 'assets/audio/adhan_fajr.mp3';
       }
 
-      await _audioPlayer.setAsset(audioPath);
+      try {
+        await _audioPlayer.setAsset(audioPath);
+      } catch (assetError) {
+        debugPrint("setAsset failed, loading audio via Uri fallback: $assetError");
+        await _audioPlayer.setAudioSource(
+          AudioSource.uri(Uri.parse('asset:///$audioPath')),
+        );
+      }
+
+      await _audioPlayer.setVolume(1.0);
       await _audioPlayer.play();
     } catch (e) {
       debugPrint("Error playing Adhan: $e");

@@ -7,6 +7,7 @@ import 'package:timezone/data/latest_10y.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/services.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prayer_times_quran_azkar_app/app/muslim_app.dart';
@@ -244,6 +245,18 @@ class NotificationService {
       _windowsTimers[id]?.cancel();
       if (!timeUntilScheduled.isNegative) {
         _windowsTimers[id] = Timer(timeUntilScheduled, () async {
+          // 1. استعادة وإظهار نافذة التطبيق فوراً فوق جميع البرامج
+          try {
+            if (await windowManager.isMinimized()) {
+              await windowManager.restore();
+            }
+            await windowManager.show();
+            await windowManager.focus();
+          } catch (e) {
+            log("WindowManager restore error: $e");
+          }
+
+          // 2. إظهار الإشعار الفوري
           await showInstantNotification(
             id: id,
             title: title,
@@ -251,6 +264,7 @@ class NotificationService {
             payload: payload,
           );
 
+          // 3. فتح شاشة الأذان الكاملة
           if (payload != null && payload.startsWith('adhan_alarm')) {
             final parts = payload.split('|');
             if (parts.length >= 3) {

@@ -1,11 +1,21 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+// 1. تحميل بيانات المفتاح من ملف key.properties
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    namespace = "com.example.chat_app"
-    compileSdk = 36 // ✅ عدلناه إلى 36 لحل مشكلة الـ geolocator
+    namespace = "com.izakrammah.muslim_worship_guid_app"
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -19,17 +29,27 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.prayer_times_quran_azkar_app"
-        
+        applicationId = "com.izakrammah.muslim_worship_guid_app"
         minSdk = flutter.minSdkVersion
-        targetSdk = 35 // 💡 اترك الـ target ليكون 35 لضمان استقرار التطبيق على أجهزة المستخدمين الحالية
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    // 2. إعدادات التوقيع (Signing Configs)
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // 3. ربط التوقيع بوضع الـ release
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

@@ -33,6 +33,7 @@ void main() async {
   // تهيئة الإشعارات المحلية والخدمات الخلفية عند بدء تشغيل التطبيق
   final notificationService = DependencyInjection.getIt<NotificationService>();
   await notificationService.init();
+  await notificationService.requestPermissions();
   await ForegroundNotificationService.init();
 
   try {

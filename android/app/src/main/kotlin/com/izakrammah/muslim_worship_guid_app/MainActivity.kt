@@ -1,4 +1,4 @@
-package com.example.muslim_worship_guid_app
+package com.izakrammah.muslim_worship_guid_app
 
 import android.os.Build
 import android.os.Bundle
