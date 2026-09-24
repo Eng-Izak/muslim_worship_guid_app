@@ -139,7 +139,8 @@ class ThemingColors {
   }
 
   static Color kDateCardBorder(BuildContext context) {
-    return const Color(0xFFD4AF37);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFFD4AF37) : const Color(0xFFDFD4B8);
   }
 
   static Color kDateCardTextMain(BuildContext context) {
@@ -154,11 +155,17 @@ class ThemingColors {
 
   // Aliases & Compatibility
   static Color kPrimary(BuildContext context) => kScaffoldBackground(context);
-  static Color kPrimaryDark(BuildContext context) => kCardBackground(context);
+  static Color kPrimaryDark(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFF0A2E23) : const Color(0xFF0D4F3C);
+  }
   static Color kAccent(BuildContext context) => const Color(0xFFD4A359);
   static Color kAccentLight(BuildContext context) => const Color(0xFFD4A359);
   static Color kClockBody(BuildContext context) => kTextMain(context);
-  static Color kTextAccent(BuildContext context) => kAccent(context);
+  static Color kTextAccent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFFD4A359) : const Color(0xFF8C6D1F);
+  }
   static Color kBorderAccent(BuildContext context) => kCardBorder(context);
 
   static const Color kError = Color(0xFFD32F2F);

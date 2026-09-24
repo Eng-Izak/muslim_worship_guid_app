@@ -36,6 +36,7 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final double clockSize = widget.size;
     final double numberFontSize = (clockSize * 0.105).clamp(8.0, 15.0);
     final double radiusOffset = clockSize * 0.36;
@@ -45,32 +46,34 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
       height: clockSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFF3F2EA), // قرص أبيض عاجي كريمي مطابق تماماً للصورة المرجعية
+        color: isDark ? const Color(0xFF1B2E25) : const Color(0xFFFBF9F3),
         border: Border.all(
-          color: const Color(0xFFE5D562), // إطار أصفر مذهب
-          width: (clockSize * 0.03).clamp(2.0, 4.0),
+          color: const Color(0xFFD4AF37),
+          width: (clockSize * 0.03).clamp(2.0, 3.5),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF7E665).withAlpha(220), // الهالة الصفراء المضيئة حول الساعة
-            blurRadius: 18,
-            spreadRadius: 4,
+            color: const Color(0xFFD4AF37).withAlpha(isDark ? 80 : 45),
+            blurRadius: 16,
+            spreadRadius: 2,
           ),
           BoxShadow(
-            color: Colors.black.withAlpha(50),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withAlpha(isDark ? 60 : 25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 1. رسم العقارب والخلفية من خلال ClockPainter
+          // 1. رسم العقارب والخلفية من خلال ClockPainter مع تمرير حالة الوضع الداكن/الفاتح
           Positioned.fill(
-            child: CustomPaint(painter: ClockPainter(_currentTime)),
+            child: CustomPaint(
+              painter: ClockPainter(_currentTime, isDark: isDark),
+            ),
           ),
-          // 2. كتابة الأرقام من 1 إلى 12 باللون الرمادي الداكن المنسق
+          // 2. كتابة الأرقام من 1 إلى 12 بتناسق تام
           ...List.generate(12, (index) {
             final int hour = index == 0 ? 12 : index;
             final double angle = (index * 30 - 90) * pi / 180;
@@ -85,7 +88,7 @@ class _AnalogClockWidgetState extends State<AnalogClockWidget> {
                 style: TextStyle(
                   fontSize: numberFontSize,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF64748B), // أرقام داكنة واضحة ومقروءة على القرص الأبيض
+                  color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                 ),
               ),
             );

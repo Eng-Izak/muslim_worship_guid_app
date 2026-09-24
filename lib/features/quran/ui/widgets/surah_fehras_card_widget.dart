@@ -11,15 +11,23 @@ class SurahFehrasCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Card(
-        color: ThemingColors.kAccent(context).withValues(alpha: 0.7),
+        color: ThemingColors.kCardBackground(context),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         elevation: 1.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: ThemingColors.kCardBorder(context),
+            width: 1.2,
+          ),
+        ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           onTap: () {
             Navigator.push(
               context,
@@ -39,8 +47,14 @@ class SurahFehrasCardWidget extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: ThemingColors.kPrimary(context).withAlpha(100),
+                    color: ThemingColors.kIconContainerBackground(context),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFFD4AF37).withAlpha(100)
+                          : const Color(0xFFC5A85A).withAlpha(80),
+                      width: 1.2,
+                    ),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -68,13 +82,15 @@ class SurahFehrasCardWidget extends StatelessWidget {
                               ? Icons.wb_sunny_outlined
                               : Icons.location_city_outlined,
                           size: 15,
-                          color: ThemingColors.kWarning,
+                          color: isDark
+                              ? const Color(0xFFFFD54F)
+                              : const Color(0xFFC5A85A),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           surah.revelationType,
                           style: TextStyle(
-                            color: ThemingColors.kPrimaryDark(context),
+                            color: ThemingColors.kTextSecondary(context),
                             fontSize: context.setSp(13),
                             fontWeight: FontWeight.w500,
                           ),
@@ -88,13 +104,13 @@ class SurahFehrasCardWidget extends StatelessWidget {
                         Icon(
                           Icons.menu_book_rounded,
                           size: 15,
-                          color: ThemingColors.kPrimary(context),
+                          color: ThemingColors.kIconColor(context),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           'آيات ${surah.ayahsNumber}',
                           style: TextStyle(
-                            color: ThemingColors.kPrimaryDark(context),
+                            color: ThemingColors.kTextSecondary(context),
                             fontSize: context.setSp(12),
                             fontWeight: FontWeight.w500,
                           ),
@@ -116,25 +132,20 @@ class SurahFehrasCardWidget extends StatelessWidget {
                         surah.name,
                         textAlign: TextAlign.right,
                         style: TextStyle(
-                          color: ThemingColors.kPrimaryDark(context),
+                          color: ThemingColors.kTextMain(context),
                           fontWeight: FontWeight.bold,
-                          fontSize: context.setSp(16),
-                          height:
-                              1.35, // ارتفاع سطر آمن تماماً للتشكيل والحركات مثل الكسرة والسكون
+                          fontSize: context.setSp(17),
+                          height: 1.35,
                         ),
                       ),
-                      const SizedBox(
-                        height: 6,
-                      ), // فاصل رأسي حقيقي ومضمون لمنع أي تداخل
+                      const SizedBox(height: 4),
                       Text(
                         surah.englishName,
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontSize: context.setSp(12),
                           fontWeight: FontWeight.w500,
-                          color: ThemingColors.kPrimaryDark(
-                            context,
-                          ).withAlpha(190),
+                          color: ThemingColors.kTextSecondary(context),
                         ),
                       ),
                     ],

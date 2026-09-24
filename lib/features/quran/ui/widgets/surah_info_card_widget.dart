@@ -10,42 +10,43 @@ class SurahInfoCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // إذا كان نص معلومات السورة فارغاً، لن يعرض الكلاس أي شيء على الشاشة
     if (surah.surahInfo.isEmpty) return const SizedBox.shrink();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentGold = isDark ? const Color(0xFFFFD54F) : const Color(0xFF8C6D1F);
+
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ThemingColors.kWarning.withValues(alpha: 0.1),
-            ThemingColors.kWarning.withValues(alpha: 0.2),
-          ],
-          begin: Alignment.center,
-          end: Alignment.center,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? const Color(0xFF1A2922) : const Color(0xFFF9F6EE),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: ThemingColors.kWarning.withValues(alpha: 0.5),
-          width: 1,
+          color: isDark ? const Color(0xFFD4AF37).withAlpha(100) : const Color(0xFFD8CBA8),
+          width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(isDark ? 40 : 12),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ExpansionTile(
-        iconColor: ThemingColors.kWarning,
-        collapsedIconColor: ThemingColors.kWarning,
-        shape:
-            const Border(), // لمنع ظهور خطوط أفقية عند فتح القائمة في بعض إصدارات فلاتر
+        iconColor: accentGold,
+        collapsedIconColor: accentGold,
+        shape: const Border(),
         collapsedShape: const Border(),
         leading: Icon(
           Icons.info_outline_rounded,
-          color: ThemingColors.kClockBody(context),
+          color: accentGold,
         ),
         title: Text(
           'عن السورة وفضائلها ومقاصدها',
           style: TextStyle(
             color: ThemingColors.kTextMain(context),
             fontWeight: FontWeight.bold,
-            fontSize: context.setSp(18),
+            fontSize: context.setSp(16),
           ),
         ),
         children: [
@@ -59,10 +60,10 @@ class SurahInfoCardWidget extends StatelessWidget {
                   surah.surahInfo,
                   textDirection: TextDirection.rtl,
                   style: TextStyle(
-                    fontSize: context.setSp(22),
-                    fontWeight: .bold,
-                    height: 2,
-                    color: ThemingColors.kTextMain(context),
+                    fontSize: context.setSp(18),
+                    fontWeight: FontWeight.w600,
+                    height: 1.8,
+                    color: isDark ? const Color(0xFFEDE8D8) : const Color(0xFF1E2421),
                   ),
                   textAlign: TextAlign.center,
                 ),

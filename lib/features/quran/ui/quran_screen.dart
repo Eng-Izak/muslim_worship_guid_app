@@ -18,81 +18,80 @@ class QuranScreen extends StatelessWidget {
         children: [
           // 1. صورة الخلفية للمسجد
           const BackgroundImageWidget(),
-          Opacity(
-            opacity: 0.85,
-            child: Scaffold(
-              backgroundColor: ThemingColors.kPrimary(context),
-              appBar: AppBar(
-                backgroundColor: ThemingColors.kCardBackground(context),
-                elevation: 0,
-                automaticallyImplyLeading: false,
-                title: Text(
-                  'فهرس السور',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+          Scaffold(
+            backgroundColor: ThemingColors.kScaffoldBackground(context),
+            appBar: AppBar(
+              backgroundColor: ThemingColors.kCardBackground(context),
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              title: Text(
+                'فهرس السور',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: ThemingColors.kIconColor(context),
+                ),
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.arrow_forward_rounded,
                     color: ThemingColors.kIconColor(context),
                   ),
                 ),
-                centerTitle: true,
-                actions: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.arrow_forward_rounded,
-                      color: ThemingColors.kIconColor(context),
-                    ),
-                  ),
-                ],
-              ),
-              body: BlocBuilder<QuranCubit, QuranState>(
-                builder: (context, state) {
-                  if (state is QuranLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is QuranSurahsLoaded) {
-                    return Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 850),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          itemCount: state.surahs.length,
-                          itemBuilder: (context, index) {
-                            final surah = state.surahs[index];
-                            return SurahFehrasCardWidget(surah: surah);
-                          },
-                        ),
-                      ),
-                    );
-                  } else if (state is QuranError) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.error_outline_rounded,
-                            color: Colors.red,
-                            size: 40,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            state.errorMessage,
-                            style: const TextStyle(color: Colors.red),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () =>
-                                context.read<QuranCubit>().loadQuranSurahs(),
-                            child: const Text('إعادة المحاولة'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-              bottomNavigationBar: const AppDeveloperFooterWidget(),
+              ],
             ),
+            body: BlocBuilder<QuranCubit, QuranState>(
+              builder: (context, state) {
+                if (state is QuranLoading) {
+                  return Center(
+                    child: CircularProgressIndicator(color: ThemingColors.kIconColor(context)),
+                  );
+                } else if (state is QuranSurahsLoaded) {
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 850),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: state.surahs.length,
+                        itemBuilder: (context, index) {
+                          final surah = state.surahs[index];
+                          return SurahFehrasCardWidget(surah: surah);
+                        },
+                      ),
+                    ),
+                  );
+                } else if (state is QuranError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Colors.red,
+                          size: 40,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          state.errorMessage,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () =>
+                              context.read<QuranCubit>().loadQuranSurahs(),
+                          child: const Text('إعادة المحاولة'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            bottomNavigationBar: const AppDeveloperFooterWidget(),
           ),
         ],
       ),

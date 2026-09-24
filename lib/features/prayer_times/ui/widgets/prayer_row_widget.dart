@@ -11,10 +11,13 @@ class PrayerRowWidget extends StatelessWidget {
   final String name;
   final String time;
   final IconData icon;
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
       child: Row(
         children: [
           Text(
@@ -22,7 +25,7 @@ class PrayerRowWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: context.setSp(18),
               fontWeight: FontWeight.bold,
-              color: Colors.amber,
+              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF0D4F3C),
             ),
           ),
           const Spacer(),
@@ -30,13 +33,17 @@ class PrayerRowWidget extends StatelessWidget {
           Text(
             name,
             style: TextStyle(
-              color: Colors.white70,
+              color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF0D4F3C),
               fontSize: context.setSp(18),
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(width: 12),
-          Icon(icon, color: Colors.white70, size: 22),
+          const SizedBox(width: 14),
+          Icon(
+            icon,
+            color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF0D4F3C),
+            size: 24,
+          ),
         ],
       ),
     );

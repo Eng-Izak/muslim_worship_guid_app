@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 
 class MiniTimeColumnWidget extends StatelessWidget {
   const MiniTimeColumnWidget({
@@ -9,6 +10,7 @@ class MiniTimeColumnWidget extends StatelessWidget {
   });
   final String title;
   final String time;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -16,18 +18,18 @@ class MiniTimeColumnWidget extends StatelessWidget {
         Text(
           title,
           style: TextStyle(
-            fontSize: context.setSp(14),
-            color: Colors.green.shade900,
-            fontWeight: .bold,
+            fontSize: context.setSp(13),
+            color: ThemingColors.kTextSecondary(context),
+            fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           time,
           style: TextStyle(
-            fontSize: context.setSp(16),
+            fontSize: context.setSp(15),
             fontWeight: FontWeight.bold,
-            color: Colors.green.shade900,
+            color: ThemingColors.kTextMain(context),
           ),
         ),
       ],

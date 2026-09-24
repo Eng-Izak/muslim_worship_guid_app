@@ -21,128 +21,128 @@ class SurahDetailsScreen extends StatelessWidget {
           SurahDetailsCubit()
             ..loadSurahAyahs(surah.number, surahName: surah.name),
       child: DefaultTabController(
-        animationDuration: Duration(seconds: 1),
+        animationDuration: const Duration(milliseconds: 300),
         length: 2,
         child: Stack(
           children: [
             // 1. صورة الخلفية للمسجد
-            BackgroundImageWidget(),
-            Opacity(
-              opacity: 0.7,
-              child: Scaffold(
-                backgroundColor: ThemingColors.kPrimaryDark(
-                  context,
-                ).withAlpha(200),
-                appBar: AppBar(
-                  backgroundColor: ThemingColors.kCardBackground(context),
-                  elevation: 0,
-                  automaticallyImplyLeading: false,
-                  title: Text(
-                    surah.name,
-                    style: TextStyle(
+            const BackgroundImageWidget(),
+            Scaffold(
+              backgroundColor: ThemingColors.kScaffoldBackground(context),
+              appBar: AppBar(
+                backgroundColor: ThemingColors.kCardBackground(context),
+                elevation: 0,
+                automaticallyImplyLeading: false,
+                title: Text(
+                  surah.name,
+                  style: TextStyle(
+                    color: ThemingColors.kIconColor(context),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                centerTitle: true,
+                actions: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(
+                      Icons.arrow_forward_rounded,
                       color: ThemingColors.kIconColor(context),
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  centerTitle: true,
-                  actions: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.arrow_forward_rounded,
-                        color: ThemingColors.kIconColor(context),
+                ],
+                bottom: TabBar(
+                  indicatorColor: ThemingColors.kHadithAccentBorder(context),
+                  labelColor: ThemingColors.kIconColor(context),
+                  unselectedLabelColor: ThemingColors.kTextSecondary(context),
+                  tabs: [
+                    Tab(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.menu_book_rounded,
+                              color: ThemingColors.kIconColor(context),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "قراءة السورة",
+                              style: TextStyle(
+                                fontSize: context.setSp(16),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Tab(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.audiotrack_rounded,
+                              color: ThemingColors.kIconColor(context),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "الاستماع والتفاصيل",
+                              style: TextStyle(
+                                fontSize: context.setSp(16),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
-                  bottom: TabBar(
-                    tabs: [
-                      Tab(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.menu_book_rounded,
-                                color: ThemingColors.kSuccess,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "قراءة السورة",
-                                style: TextStyle(
-                                  color: ThemingColors.kClockBody(context),
-                                  fontSize: context.setSp(16),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Tab(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.audiotrack_rounded,
-                                color: ThemingColors.kSuccess,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "الاستماع والتفاصيل",
-                                style: TextStyle(
-                                  color: ThemingColors.kClockBody(context),
-                                  fontSize: context.setSp(16),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
-                body: BlocBuilder<SurahDetailsCubit, SurahDetailsState>(
-                  builder: (context, state) {
-                    if (state is SurahDetailsLoading) {
-                      return Center(child: CircularProgressIndicator());
-                    } else if (state is SurahDetailsLoaded) {
-                      final ayahs = state.ayahs;
-
-                      return TabBarView(
-                        children: [
-                          // --- التبويب الأول: شاشة القراءة النصية المدمجة مع كارت التفسير ---
-                          SurahDetailsScreenTapOneWidget(
-                            surah: surah,
-                            ayahs: ayahs,
-                          ),
-
-                          // --- التبويب الثاني: قائمة الاستماع للآيات وتفاصيلها ---
-                          SurahDetailsScreenTapTwoWidget(
-                            ayahs: ayahs,
-                            surah: surah,
-                            state: state,
-                          ),
-                        ],
-                      );
-                    } else if (state is SurahDetailsError) {
-                      return Center(
-                        child: Text(
-                          state.errorMessage,
-                          style: TextStyle(color: ThemingColors.kError),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                bottomNavigationBar: const AppDeveloperFooterWidget(),
               ),
+              body: BlocBuilder<SurahDetailsCubit, SurahDetailsState>(
+                builder: (context, state) {
+                  if (state is SurahDetailsLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: ThemingColors.kIconColor(context),
+                      ),
+                    );
+                  } else if (state is SurahDetailsLoaded) {
+                    final ayahs = state.ayahs;
+
+                    return TabBarView(
+                      children: [
+                        // --- التبويب الأول: شاشة القراءة النصية المدمجة مع كارت التفسير ---
+                        SurahDetailsScreenTapOneWidget(
+                          surah: surah,
+                          ayahs: ayahs,
+                        ),
+
+                        // --- التبويب الثاني: قائمة الاستماع للآيات وتفاصيلها ---
+                        SurahDetailsScreenTapTwoWidget(
+                          ayahs: ayahs,
+                          surah: surah,
+                          state: state,
+                        ),
+                      ],
+                    );
+                  } else if (state is SurahDetailsError) {
+                    return Center(
+                      child: Text(
+                        state.errorMessage,
+                        style: TextStyle(color: ThemingColors.kError),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              bottomNavigationBar: const AppDeveloperFooterWidget(),
             ),
           ],
         ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/arabic_number_extension.dart';
-import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/features/quran/data/models/ayah_model.dart';
 import 'package:prayer_times_quran_azkar_app/features/quran/data/models/surah_model.dart';
 import 'package:prayer_times_quran_azkar_app/features/quran/ui/widgets/surah_header_banner_widget.dart';
@@ -25,19 +24,25 @@ class SurahDetailsScreenTapOneWidget extends StatefulWidget {
 class _SurahDetailsScreenTapOneWidgetState
     extends State<SurahDetailsScreenTapOneWidget> {
   double _fontScaleDelta = 0.0;
-  bool _isDarkMode = true;
+  bool? _isDarkMode;
 
   @override
   Widget build(BuildContext context) {
+    // البدء بالنمط المناسب لنمط النظام الحالي إذا لم يحدده المستخدم يدوياً
+    final systemIsDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = _isDarkMode ?? systemIsDark;
+
     // تجميع الآيات بناءً على صفحات المصحف الشريف
     final Map<int, List<AyahModel>> pageGroups = {};
     for (var ayah in widget.ayahs) {
       pageGroups.putIfAbsent(ayah.page, () => []).add(ayah);
     }
 
-    final Color bgColor = _isDarkMode ? const Color(0xFF181C1A) : const Color(0xFFFAF6EE);
-    final Color textColor = _isDarkMode ? const Color(0xFFE8E4D8) : const Color(0xFF1E2421);
-    final Color headerTextColor = _isDarkMode ? const Color(0xFF8E9B95) : const Color(0xFF5A6B63);
+    final Color bgColor = isDark ? const Color(0xFF141816) : const Color(0xFFFAF7EE);
+    final Color textColor = isDark ? const Color(0xFFEDE8D8) : const Color(0xFF15221B);
+    final Color headerTextColor = isDark ? const Color(0xFF9EACA5) : const Color(0xFF4D6157);
+    final Color pageCardBg = isDark ? const Color(0xFF1C221F) : const Color(0xFFFFFFFF);
+    final Color pageCardBorder = isDark ? const Color(0xFF28332E) : const Color(0xFFDFD6C7);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -48,7 +53,7 @@ class _SurahDetailsScreenTapOneWidgetState
             // شريط التحكم السريع (حجم الخط وتبديل المظهر)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              color: _isDarkMode ? const Color(0xFF121514) : const Color(0xFFF0EBE0),
+              color: isDark ? const Color(0xFF101412) : const Color(0xFFEEE7DA),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -57,7 +62,7 @@ class _SurahDetailsScreenTapOneWidgetState
                       IconButton(
                         tooltip: 'تكبير الخط',
                         icon: const Icon(Icons.zoom_in, size: 22),
-                        color: ThemingColors.kWarning,
+                        color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF8C6D1F),
                         onPressed: () {
                           setState(() {
                             if (_fontScaleDelta < 8.0) _fontScaleDelta += 2.0;
@@ -67,7 +72,7 @@ class _SurahDetailsScreenTapOneWidgetState
                       IconButton(
                         tooltip: 'تصغير الخط',
                         icon: const Icon(Icons.zoom_out, size: 22),
-                        color: ThemingColors.kWarning,
+                        color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF8C6D1F),
                         onPressed: () {
                           setState(() {
                             if (_fontScaleDelta > -6.0) _fontScaleDelta -= 2.0;
@@ -79,22 +84,23 @@ class _SurahDetailsScreenTapOneWidgetState
                   Row(
                     children: [
                       Text(
-                        _isDarkMode ? 'الوضع الليلي' : 'الوضع النهاري',
+                        isDark ? 'الوضع الليلي' : 'الوضع النهاري',
                         style: TextStyle(
                           fontSize: context.setSp(12),
+                          fontWeight: FontWeight.w600,
                           color: headerTextColor,
                         ),
                       ),
                       IconButton(
                         tooltip: 'تبديل المظهر',
                         icon: Icon(
-                          _isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                          isDark ? Icons.dark_mode : Icons.light_mode,
                           size: 20,
                         ),
-                        color: ThemingColors.kWarning,
+                        color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF8C6D1F),
                         onPressed: () {
                           setState(() {
-                            _isDarkMode = !_isDarkMode;
+                            _isDarkMode = !isDark;
                           });
                         },
                       ),
@@ -122,26 +128,29 @@ class _SurahDetailsScreenTapOneWidgetState
                         // 1. كارت معلومات وفضائل السورة
                         SurahInfoCardWidget(surah: widget.surah),
 
-                        // 2. عرض صفات المصحف الشريف متتابعة بشكل احترافي
+                        // 2. عرض صفحات المصحف الشريف متتابعة بشكل احترافي
                         ...pageGroups.entries.map((entry) {
                           final int pageNum = entry.key;
                           final List<AyahModel> pageAyahs = entry.value;
                           final int juzNum = pageAyahs.isNotEmpty ? pageAyahs.first.juz : 1;
 
                           return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            margin: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
-                              color: _isDarkMode
-                                  ? const Color(0xFF1B201E).withAlpha(180)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(12),
+                              color: pageCardBg,
+                              borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: _isDarkMode
-                                    ? const Color(0xFF28332E)
-                                    : const Color(0xFFE2DACD),
-                                width: 1,
+                                color: pageCardBorder,
+                                width: 1.2,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(isDark ? 50 : 15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -155,7 +164,7 @@ class _SurahDetailsScreenTapOneWidgetState
                                       style: TextStyle(
                                         fontSize: context.setSp(13),
                                         color: headerTextColor,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(
@@ -165,7 +174,7 @@ class _SurahDetailsScreenTapOneWidgetState
                                       style: TextStyle(
                                         fontSize: context.setSp(13),
                                         color: headerTextColor,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
@@ -228,13 +237,13 @@ class _SurahDetailsScreenTapOneWidgetState
                                             alignment: PlaceholderAlignment.middle,
                                             child: Container(
                                               margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                              width: 26,
-                                              height: 26,
+                                              width: 28,
+                                              height: 28,
                                               decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                color: const Color(0xFF1B4E3E),
+                                                color: isDark ? const Color(0xFF1B4E3E) : const Color(0xFFEBF3EE),
                                                 border: Border.all(
-                                                  color: const Color(0xFF389277),
+                                                  color: isDark ? const Color(0xFF389277) : const Color(0xFF2E6E56),
                                                   width: 1.2,
                                                 ),
                                               ),
@@ -244,7 +253,7 @@ class _SurahDetailsScreenTapOneWidgetState
                                                 style: TextStyle(
                                                   fontSize: context.setSp(11),
                                                   fontWeight: FontWeight.bold,
-                                                  color: const Color(0xFF53D4A8),
+                                                  color: isDark ? const Color(0xFF53D4A8) : const Color(0xFF0D4F3C),
                                                 ),
                                               ),
                                             ),

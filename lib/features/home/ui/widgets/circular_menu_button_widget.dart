@@ -20,8 +20,10 @@ class CircularMenuButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color goldColor = Color(0xFFE6C875);
-    const Color darkBgColor = Color(0xFF1B4536);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const Color goldAccent = Color(0xFFD4AF37);
+    final Color circleBg = isDark ? const Color(0xFF1B4536) : const Color(0xFF0D4F3C);
+    final Color textColor = isDark ? const Color(0xFFE0E0E0) : const Color(0xFF0D4F3C);
 
     return GestureDetector(
       onTap: onTap,
@@ -34,25 +36,30 @@ class CircularMenuButtonWidget extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: darkBgColor,
-              border: Border.all(color: goldColor, width: 1.8),
+              color: circleBg,
+              border: Border.all(
+                color: goldAccent,
+                width: 1.8,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: goldColor.withAlpha(50),
+                  color: isDark
+                      ? goldAccent.withAlpha(50)
+                      : const Color(0xFF0D4F3C).withAlpha(30),
                   blurRadius: 8,
                   spreadRadius: 1,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: icon != null
-                ? Icon(icon, size: length, color: goldColor)
+                ? Icon(icon, size: length, color: const Color(0xFFF3E7C4))
                 : imagePath != null
                 ? Image.asset(
                     imagePath!,
                     width: length,
                     height: length,
                     fit: BoxFit.contain,
-                    // color: goldColor,
                   )
                 : const SizedBox.shrink(),
           ),
@@ -65,7 +72,7 @@ class CircularMenuButtonWidget extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: context.setSp(12.5),
-                      color: goldColor,
+                      color: textColor,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
                     ),

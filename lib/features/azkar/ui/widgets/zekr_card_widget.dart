@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/features/azkar/data/models/azkar_model.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 
@@ -15,28 +16,48 @@ class _ZekrCardWidgetState extends State<ZekrCardWidget> {
   @override
   Widget build(BuildContext context) {
     final bool isCompleted = widget.item.currentCount >= widget.item.totalCount;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // ألوان البطاقة حسب الوضع الفاتح أو الداكن وحالة إتمام الذكر
+    final Color cardBg = isDark
+        ? (isCompleted ? const Color(0xFF193D31) : const Color(0xFF163E32))
+        : (isCompleted ? const Color(0xFFF0F6F2) : ThemingColors.kCardBackground(context));
+
+    final Color cardBorder = isDark
+        ? (isCompleted ? const Color(0xFFC5A85A).withAlpha(100) : const Color(0xFF2E6E56).withAlpha(80))
+        : (isCompleted ? const Color(0xFF2E6E56).withAlpha(120) : ThemingColors.kCardBorder(context));
+
+    final Color zekrTextColor = isDark
+        ? (isCompleted ? Colors.white60 : Colors.white)
+        : (isCompleted ? const Color(0xFF4A6156) : ThemingColors.kTextReading(context));
+
+    final Color descBg = isDark
+        ? Colors.black.withAlpha(40)
+        : ThemingColors.kIconContainerBackground(context);
+
+    final Color descTextColor = isDark
+        ? const Color(0xFFC5A85A)
+        : const Color(0xFF8C6D1F);
+
+    final Color badgeBg = isCompleted
+        ? (isDark ? const Color(0xFF215443) : const Color(0xFF0D4F3C))
+        : (isDark ? const Color(0xFFC5A85A) : const Color(0xFFD4AF37));
+
+    final Color badgeContentColor = isCompleted
+        ? (isDark ? const Color(0xFFC5A85A) : const Color(0xFFF3E7C4))
+        : (isDark ? Colors.black : const Color(0xFF0D4F3C));
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 350),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isCompleted
-            ? const Color(0xFF193D31)
-            : const Color(0xFF255E4B), // يغمق اللون عند الانتهاء
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isCompleted
-              ? const Color(0xFFC5A85A).withAlpha(80)
-              : Colors.transparent,
-          width: 1,
+          color: cardBorder,
+          width: 1.2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(30),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: ThemingColors.kCardShadow(context),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -53,45 +74,53 @@ class _ZekrCardWidgetState extends State<ZekrCardWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // نص الذكر الفاخر بالتشكيل
+              // نص الذكر الفاخر بالتشكيل عالي الوضوح
               Text(
                 widget.item.zekrText,
                 textDirection: TextDirection.rtl,
                 textAlign: TextAlign.justify,
                 style: TextStyle(
                   fontSize: context.setSp(17),
-                  height: 1.7,
-                  fontWeight: FontWeight.w500,
-                  color: isCompleted ? Colors.white60 : Colors.white,
-                  decoration: isCompleted
-                      ? TextDecoration.none
-                      : TextDecoration.none,
+                  height: 1.85,
+                  fontWeight: FontWeight.w600,
+                  color: zekrTextColor,
                 ),
               ),
 
               // الوصف أو فضل الذكر (إن وجد)
               if (widget.item.arabicDescription.isNotEmpty) ...[
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(30),
-                    borderRadius: BorderRadius.circular(8),
+                    color: descBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.transparent
+                          : ThemingColors.kCardBorder(context),
+                      width: 0.8,
+                    ),
                   ),
                   child: Text(
                     widget.item.arabicDescription,
                     textDirection: TextDirection.rtl,
                     style: TextStyle(
-                      fontSize: context.setSp(12),
-                      color: Color(0xFFC5A85A),
+                      fontSize: context.setSp(12.5),
+                      fontWeight: FontWeight.w500,
+                      color: descTextColor,
+                      height: 1.5,
                     ),
                   ),
                 ),
               ],
 
-              SizedBox(height: 14),
-              const Divider(color: Colors.white10, height: 1),
-              SizedBox(height: 10),
+              const SizedBox(height: 14),
+              Divider(
+                color: isDark ? Colors.white10 : ThemingColors.kCardBorder(context),
+                height: 1,
+              ),
+              const SizedBox(height: 10),
 
               // شريط التحكم السفلي (المصدر + العداد التفاعلي)
               Row(
@@ -102,8 +131,9 @@ class _ZekrCardWidgetState extends State<ZekrCardWidget> {
                         ? "المصدر: ${widget.item.reference}"
                         : "",
                     style: TextStyle(
-                      fontSize: context.setSp(11),
-                      color: Colors.white38,
+                      fontSize: context.setSp(11.5),
+                      fontWeight: FontWeight.w500,
+                      color: ThemingColors.kTextSecondary(context),
                     ),
                   ),
 
@@ -114,10 +144,15 @@ class _ZekrCardWidgetState extends State<ZekrCardWidget> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: isCompleted
-                          ? const Color(0xFF215443)
-                          : const Color(0xFFC5A85A),
+                      color: badgeBg,
                       borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: badgeBg.withAlpha(isDark ? 40 : 60),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -127,18 +162,14 @@ class _ZekrCardWidgetState extends State<ZekrCardWidget> {
                           style: TextStyle(
                             fontSize: context.setSp(13),
                             fontWeight: FontWeight.bold,
-                            color: isCompleted
-                                ? const Color(0xFFC5A85A)
-                                : Colors.black,
+                            color: badgeContentColor,
                           ),
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Icon(
-                          isCompleted ? Icons.check_circle : Icons.fingerprint,
+                          isCompleted ? Icons.check_circle_rounded : Icons.fingerprint_rounded,
                           size: 16,
-                          color: isCompleted
-                              ? const Color(0xFFC5A85A)
-                              : Colors.black,
+                          color: badgeContentColor,
                         ),
                       ],
                     ),

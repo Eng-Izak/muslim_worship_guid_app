@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/ui/widgets/mini_time_column_widget.dart';
 
 class MonthPrayersTimesCard extends StatelessWidget {
@@ -9,24 +10,45 @@ class MonthPrayersTimesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.amber.shade100,
-      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      color: ThemingColors.kCardBackground(context),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: ThemingColors.kCardBorder(context),
+          width: 1.2,
+        ),
+      ),
       child: ExpansionTile(
-        leading: const Icon(Icons.calendar_today, color: Colors.green),
+        iconColor: ThemingColors.kIconColor(context),
+        collapsedIconColor: ThemingColors.kTextSecondary(context),
+        shape: const Border(),
+        collapsedShape: const Border(),
+        leading: Icon(
+          Icons.calendar_month_rounded,
+          color: ThemingColors.kIconColor(context),
+        ),
         title: Text(
-          textAlign: .center,
           "${dayData.dayName} - ${dayData.hijriDateStr}",
-          style: TextStyle(fontWeight: FontWeight.w600),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: ThemingColors.kTextMain(context),
+          ),
         ),
         subtitle: Text(
-          textAlign: .center,
           "الفجر: ${dayData.fajr}  |  المغرب: ${dayData.maghrib}",
-          style: TextStyle(color: Colors.green.shade900, fontWeight: .bold),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: ThemingColors.kTextSecondary(context),
+            fontWeight: FontWeight.w600,
+          ),
         ),
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(
-              vertical: 12.0,
+              vertical: 14.0,
               horizontal: 16.0,
             ),
             child: Row(

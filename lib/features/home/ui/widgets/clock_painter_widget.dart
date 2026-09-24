@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 
 class ClockPainter extends CustomPainter {
   final DateTime dateTime;
+  final bool isDark;
 
-  ClockPainter(this.dateTime);
+  ClockPainter(this.dateTime, {this.isDark = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -35,21 +36,33 @@ class ClockPainter extends CustomPainter {
     final double hoursAngle =
         ((dateTime.hour % 12 * 30) + (dateTime.minute * 0.5)) * pi / 180;
 
-    // [3] إعدادات رسم العقارب باللون الداكن مع عقرب الثواني الأصفر المذهب
+    // [3] إعدادات ألوان العقارب حسب نمط الشاشة لتكون متناسقة وعالية التباين
+    final Color hourColor = isDark
+        ? const Color(0xFFE6C875) // ذهبي ملكي فاتح على القرص الداكن
+        : const Color(0xFF0D4F3C); // أخضر زمردي ملكي على القرص الفاتح
+
+    final Color minuteColor = isDark
+        ? const Color(0xFFF5E6B3) // عاجي مذهب مشرق
+        : const Color(0xFF1B4536); // زمردي كلاسيكي داكن
+
+    final Color secondColor = isDark
+        ? const Color(0xFFFFD54F) // أصفر ذهبي ساطع
+        : const Color(0xFFC5A85A); // ذهبي إسلامي راقٍ
+
     final Paint hourPaint = Paint()
-      ..color = const Color(0xFF1E3A2F) // عقرب الساعات داكن
+      ..color = hourColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = (radius * 0.075).clamp(3.0, 5.0);
 
     final Paint minutePaint = Paint()
-      ..color = const Color(0xFF1E3A2F) // عقرب الدقائق داكن
+      ..color = minuteColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = (radius * 0.05).clamp(2.0, 3.8);
 
     final Paint secondPaint = Paint()
-      ..color = const Color(0xFFEAB308) // عقرب الثواني أصفر براق
+      ..color = secondColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = (radius * 0.03).clamp(1.2, 2.2);
@@ -105,6 +118,6 @@ class ClockPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ClockPainter oldDelegate) {
-    return oldDelegate.dateTime != dateTime;
+    return oldDelegate.dateTime != dateTime || oldDelegate.isDark != isDark;
   }
 }
