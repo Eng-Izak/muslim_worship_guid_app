@@ -8,6 +8,7 @@ import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
 
 import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/adhan_voice_selector_card.dart';
+import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/persistent_notification_card.dart';
 
 class UserSettingsScreen extends StatelessWidget {
   const UserSettingsScreen({super.key});
@@ -55,6 +56,11 @@ class UserSettingsScreen extends StatelessWidget {
             children: const [
               // قسم اختيار نمط العرض (فاتح / داكن / تلقائي)
               ThemeSelectorCard(),
+
+              SizedBox(height: 12),
+
+              // قسم إشعار مواقيت الصلاة المستمر وتثبيته في الخلفية
+              PersistentNotificationCard(),
 
               SizedBox(height: 12),
 

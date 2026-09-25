@@ -11,6 +11,7 @@ import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependenc
 import 'package:prayer_times_quran_azkar_app/core/services/notification_service.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/data/models/prayer_times_model.dart';
 part 'prayer_times_state.dart';
 
@@ -46,17 +47,16 @@ class PrayerCubit extends Cubit<PrayerStates> {
     // 🔥 خطوة حماية معمارية: إطلاق حالة تحميل للتصفير وضمان استقبال الـ Pipeline للحسابات بشكل متزامن
     emit(PrayerLoadingState());
 
-    // الحساب الفوري لأول مرة لئلا تنتظر الواجهة ثانية كاملة أو تتجمد
-    _calculateCurrentTimes();
+    // الحساب الفوري لأول مرة وتحديث الجدولة والخدمة
+    _calculateCurrentTimes(isInitialFetch: true);
 
-    // تحديث العداد دورياً كل دقيقة واحدة فقط لتحديث المواقيت عند دخول صلاة جديدة
-    // العداد التنازلي الحي (بالثواني) سيتم حسابه محلياً في واجهة المستخدم لمنع إعادة بناء التطبيق بالكامل
+    // تحديث العداد دورياً كل دقيقة فقط لتحديث واجهة المواقيت محلياً دون إعادة تشغيل الخدمة الخلفية كل دقيقة
     _countdownTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      _calculateCurrentTimes();
+      _calculateCurrentTimes(isInitialFetch: false);
     });
   }
 
-  void _calculateCurrentTimes() {
+  void _calculateCurrentTimes({bool isInitialFetch = false}) {
     // حماية التطبيق في حالة استدعاء الحساب قبل تزويده بالإحداثيات
     if (_currentCoordinates == null) return;
 
@@ -138,24 +138,33 @@ class PrayerCubit extends Cubit<PrayerStates> {
       );
 
       emit(PrayerSuccessState(prayerModel));
-      _scheduleDailyPrayers(prayerTimes);
 
-      // تحديث الإشعار المستمر للصلاة القادمة لنظام الويندوز
-      if (!kIsWeb && Platform.isWindows) {
-        DependencyInjection.getIt<NotificationService>()
-            .updateWindowsPersistentNotification(
-          prayerName: nextPrayerNameAr,
-          prayerTime: formatTime(nextPrayerTime),
-          remainingTime: remainingStr,
-        );
-      }
-
-      // تشغيل وتحديث الخدمة الخلفية للإشعار المستمر للأندرويد
-      ForegroundNotificationService.start(
-        latitude: _currentCoordinates!.latitude,
-        longitude: _currentCoordinates!.longitude,
+      // فحص وإطلاق شاشة الأذان إجبارياً فور دخول وقت أي صلاة
+      PrayerAdhanManager.checkAndTriggerAdhan(
+        prayerTimes: prayerTimes,
         cityName: _currentCityName,
       );
+
+      if (isInitialFetch) {
+        _scheduleDailyPrayers(prayerTimes);
+
+        // تحديث الإشعار المستمر للصلاة القادمة لنظام الويندوز
+        if (!kIsWeb && Platform.isWindows) {
+          DependencyInjection.getIt<NotificationService>()
+              .updateWindowsPersistentNotification(
+            prayerName: nextPrayerNameAr,
+            prayerTime: formatTime(nextPrayerTime),
+            remainingTime: remainingStr,
+          );
+        }
+
+        // تشغيل وتحديث الخدمة الخلفية للإشعار المستمر للأندرويد مرة واحدة فقط عند جلب الإحداثيات
+        ForegroundNotificationService.start(
+          latitude: _currentCoordinates!.latitude,
+          longitude: _currentCoordinates!.longitude,
+          cityName: _currentCityName,
+        );
+      }
     } catch (e) {
       _countdownTimer?.cancel();
       emit(PrayerErrorState("حدث خطأ أثناء حساب المواقيت: ${e.toString()}"));

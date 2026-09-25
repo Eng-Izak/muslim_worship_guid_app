@@ -21,12 +21,16 @@ void startCallback() {
 class ForegroundNotificationService {
   static const String channelId = 'prayer_times_foreground_channel';
   static const String channelName = 'مواقيت الصلاة المستمرة';
-  static const String channelDesc = 'إشعار مستمر يعرض العد التنازلي للصلاة القادمة والموقع الحالي.';
+  static const String channelDesc = 'إشعار مستمر يعرض العد التنازلي للصلاة القادمة ومواقيت الصلاة.';
+
+  static const double defaultLat = 21.4225; // مكة المكرمة
+  static const double defaultLng = 39.8262;
+  static const String defaultCity = 'مكة المكرمة';
 
   /// التحقق من أن المنصة تدعم الخدمة الخلفية (أندرويد و iOS فقط)
   static bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-  /// تهيئة إعدادات الخدمة الخلفية المستمرة
+  /// تهيئة إعدادات الخدمة الخلفية المستمرة مع حماية كاملة وضمان عدم توقفها
   static Future<void> init() async {
     if (!isSupported) return;
     FlutterForegroundTask.init(
@@ -34,34 +38,84 @@ class ForegroundNotificationService {
         channelId: channelId,
         channelName: channelName,
         channelDescription: channelDesc,
-        channelImportance: NotificationChannelImportance.LOW,
-        priority: NotificationPriority.LOW,
+        channelImportance: NotificationChannelImportance.DEFAULT,
+        priority: NotificationPriority.HIGH,
+        enableVibration: false,
+        playSound: false,
+        showWhen: true,
+        onlyAlertOnce: true,
+        visibility: NotificationVisibility.VISIBILITY_PUBLIC,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         showNotification: true,
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(1000),
+        eventAction: ForegroundTaskEventAction.repeat(30000), // كل 30 ثانية لتحديث عداد الصلاة بدقة
         autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
         allowWifiLock: true,
+        allowAutoRestart: true,
+        stopWithTask: false, // لا تتوقف الخدمة إطلاقاً عند إغلاق التطبيق أو مسحه من التطبيقات الحديثة
       ),
     );
 
     // التشغيل التلقائي المستمر في الخلفية إذا كانت الإحداثيات محفوظة مسبقاً
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 2),
+      );
       final double lat = prefs.getDouble('lat') ?? 0.0;
       final double lng = prefs.getDouble('lng') ?? 0.0;
-      final String city = prefs.getString('city_name') ?? "موقعي الحالي";
+      final String rawCity = prefs.getString('city_name') ?? defaultCity;
+      final String city = rawCity.trim().isEmpty ? defaultCity : rawCity.trim();
       if (lat != 0.0 && lng != 0.0) {
-        if (!await FlutterForegroundTask.isRunningService) {
-          await start(latitude: lat, longitude: lng, cityName: city);
+        final bool isRunning = await FlutterForegroundTask.isRunningService
+            .timeout(const Duration(seconds: 2), onTimeout: () => false);
+        if (!isRunning) {
+          await start(latitude: lat, longitude: lng, cityName: city)
+              .timeout(const Duration(seconds: 3));
         }
       }
     } catch (e) {
       log("Error auto-starting persistent foreground service on init: $e");
+    }
+  }
+
+  /// طلب الإذن وبدء الخدمة إجبارياً بعد تثبيت التطبيق مباشرة لضمان بقائها وظهورها الدائم
+  static Future<void> requestPermissionsAndStartMandatory() async {
+    if (!isSupported) return;
+
+    try {
+      // 1. طلب إذن الإشعارات بشكل إجباري ومباشر (ضروري جداً لنظام أندرويد 13+)
+      final NotificationPermission notificationPermission =
+          await FlutterForegroundTask.checkNotificationPermission();
+      if (notificationPermission != NotificationPermission.granted) {
+        await FlutterForegroundTask.requestNotificationPermission();
+      }
+
+      // 2. طلب استثناء التطبيق من قيود توفير طاقة البطارية (Battery Optimization)
+      // هذا هو العامل الحاسم في بقاء الإشعار وظهوره دائماً على الهواتف الحقيقية
+      // (سامسونج، شاومي، بيكسل، أوبو، هواوي) بدون أن يغلقه النظام
+      final bool isIgnoringBattery =
+          await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+      if (!isIgnoringBattery) {
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }
+
+      // 3. تشغيل الإشعار الدائم فوراً بدون أي تأخير بإحداثيات المستخدم أو الإحداثيات الافتراضية
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 2),
+      );
+      final double lat = prefs.getDouble('lat') ?? defaultLat;
+      final double lng = prefs.getDouble('lng') ?? defaultLng;
+      final String rawCity = prefs.getString('city_name') ?? defaultCity;
+      final String city = rawCity.trim().isEmpty ? defaultCity : rawCity.trim();
+
+      await start(latitude: lat, longitude: lng, cityName: city);
+    } catch (e) {
+      log("Error during mandatory foreground service startup: $e");
     }
   }
 
@@ -73,16 +127,23 @@ class ForegroundNotificationService {
   }) async {
     if (!isSupported) return;
 
+    final String cleanCity =
+        cityName.trim().isEmpty ? defaultCity : cityName.trim();
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('lat', latitude);
     await prefs.setDouble('lng', longitude);
-    await prefs.setString('city_name', cityName);
+    await prefs.setString('city_name', cleanCity);
 
-    if (await FlutterForegroundTask.isRunningService) {
-      await stop();
+    // إذا كانت الخدمة تعمل بالفعل، نكتفي بتحديث بياناتها المباشرة بدون وميض أو توقف
+    final bool isRunning = await FlutterForegroundTask.isRunningService
+        .timeout(const Duration(seconds: 1), onTimeout: () => false);
+    if (isRunning) {
+      await updateNotificationData(latitude, longitude, cleanCity);
+      return;
     }
 
-    String initialText = cityName;
+    String initialText = cleanCity;
     try {
       final now = DateTime.now();
       final coordinates = Coordinates(latitude, longitude);
@@ -134,18 +195,26 @@ class ForegroundNotificationService {
       log("Error calculating initial text: $e");
     }
 
+    HijriCalendar.setLocal('ar');
+    final hijri = HijriCalendar.now();
+    final hijriDateStr = "${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear}";
+
     await FlutterForegroundTask.startService(
-      notificationTitle: 'جاري حساب المواقيت...',
+      serviceTypes: [
+        ForegroundServiceTypes.dataSync,
+        ForegroundServiceTypes.specialUse,
+      ],
+      notificationTitle: "$hijriDateStr | $cityName",
       notificationText: initialText,
       callback: startCallback,
       notificationButtons: [
         const NotificationButton(id: 'update_location', text: 'تحديث الموقع'),
-        const NotificationButton(id: 'open_app', text: 'افتح صلاتك'),
+        const NotificationButton(id: 'open_app', text: 'افتح التطبيق'),
       ],
     );
   }
 
-  /// إوقاف الخدمة الخلفية
+  /// إيقاف الخدمة الخلفية
   static Future<void> stop() async {
     if (!isSupported) return;
     if (await FlutterForegroundTask.isRunningService) {
@@ -161,6 +230,13 @@ class ForegroundNotificationService {
   ) async {
     if (!isSupported) return;
     try {
+      final bool isRunning = await FlutterForegroundTask.isRunningService
+          .timeout(const Duration(seconds: 1), onTimeout: () => false);
+      if (!isRunning) {
+        await start(latitude: latitude, longitude: longitude, cityName: cityName);
+        return;
+      }
+
       final now = DateTime.now();
       final coordinates = Coordinates(latitude, longitude);
       final params = CalculationParameters(
@@ -211,12 +287,15 @@ class ForegroundNotificationService {
         countdownText = "حان الآن موعد صلاة $nextPrayerNameAr";
       }
 
+      final String cleanCity =
+          cityName.trim().isEmpty ? defaultCity : cityName.trim();
+
       HijriCalendar.setLocal('ar');
       final hijri = HijriCalendar.now();
       final hijriDateStr = "${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear}";
 
       await FlutterForegroundTask.updateService(
-        notificationTitle: "$hijriDateStr | $cityName",
+        notificationTitle: "$hijriDateStr | $cleanCity",
         notificationText: countdownText,
       );
     } catch (e) {
@@ -227,16 +306,19 @@ class ForegroundNotificationService {
 
 /// معالج المهام الخلفية لإشعار الـ Foreground Service
 class NotificationTaskHandler extends TaskHandler {
-  double _latitude = 0.0;
-  double _longitude = 0.0;
-  String _cityName = "موقعي الحالي";
+  double _latitude = ForegroundNotificationService.defaultLat;
+  double _longitude = ForegroundNotificationService.defaultLng;
+  String _cityName = ForegroundNotificationService.defaultCity;
 
   Future<void> _loadLocationData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _latitude = prefs.getDouble('lat') ?? 0.0;
-      _longitude = prefs.getDouble('lng') ?? 0.0;
-      _cityName = prefs.getString('city_name') ?? "موقعي الحالي";
+      _latitude = prefs.getDouble('lat') ?? ForegroundNotificationService.defaultLat;
+      _longitude = prefs.getDouble('lng') ?? ForegroundNotificationService.defaultLng;
+      final rawCity = prefs.getString('city_name');
+      _cityName = (rawCity != null && rawCity.trim().isNotEmpty)
+          ? rawCity.trim()
+          : ForegroundNotificationService.defaultCity;
     } catch (e) {
       log("Error loading background location data: $e");
     }
@@ -251,12 +333,73 @@ class NotificationTaskHandler extends TaskHandler {
     }
     await _loadLocationData();
     await _updateNotification();
+    await _checkBackgroundAdhanTrigger();
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) async {
     await _loadLocationData();
     await _updateNotification();
+    await _checkBackgroundAdhanTrigger();
+  }
+
+  Future<void> _checkBackgroundAdhanTrigger() async {
+    if (_latitude == 0.0 || _longitude == 0.0) return;
+    try {
+      final now = DateTime.now();
+      final coordinates = Coordinates(_latitude, _longitude);
+      final params = CalculationParameters(
+        method: CalculationMethod.egyptian,
+        fajrAngle: 19.5,
+        ishaAngle: 17.5,
+        madhab: Madhab.shafi,
+      );
+
+      final prayerTimes = PrayerTimes(
+        date: now,
+        coordinates: coordinates,
+        calculationParameters: params,
+      );
+
+      final prayers = [
+        {'name': 'الفجر', 'time': prayerTimes.fajr},
+        {'name': 'الظهر', 'time': prayerTimes.dhuhr},
+        {'name': 'العصر', 'time': prayerTimes.asr},
+        {'name': 'المغرب', 'time': prayerTimes.maghrib},
+        {'name': 'العشاء', 'time': prayerTimes.isha},
+      ];
+
+      for (final prayer in prayers) {
+        final String name = prayer['name'] as String;
+        final DateTime time = prayer['time'] as DateTime;
+
+        final diffInSeconds = now.difference(time).inSeconds;
+
+        // إذا كان الفارق بين 0 و 90 ثانية (أي وقت الصلاة دخل الآن)
+        if (diffInSeconds >= 0 && diffInSeconds <= 90) {
+          final prefs = await SharedPreferences.getInstance();
+          final String todayKey = '${now.year}-${now.month}-${now.day}_$name';
+          final String? lastTriggered =
+              prefs.getString('last_adhan_triggered_key');
+
+          if (lastTriggered != todayKey) {
+            await prefs.setString('last_adhan_triggered_key', todayKey);
+            await prefs.setString('active_adhan_prayer', name);
+            await prefs.setString(
+              'active_adhan_time',
+              DateFormat('hh:mm a', 'ar').format(time.toLocal()),
+            );
+
+            log("🚨 [Background Task] حان موعد صلاة $name! إيقاظ الشاشة وإطلاق شاشة الأذان...");
+            // تشغيل التطبيق وإيقاظ الشاشة وعرض شاشة الأذان فوق شاشة القفل
+            FlutterForegroundTask.launchApp();
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      log("Error checking background Adhan trigger: $e");
+    }
   }
 
   @override
@@ -277,7 +420,6 @@ class NotificationTaskHandler extends TaskHandler {
   }
 
   Future<void> _updateNotification() async {
-    if (_latitude == 0.0 && _longitude == 0.0) return;
     await ForegroundNotificationService.updateNotificationData(
       _latitude,
       _longitude,
@@ -313,7 +455,7 @@ class NotificationTaskHandler extends TaskHandler {
           _cityName = placemark.locality ??
               placemark.subAdministrativeArea ??
               placemark.administrativeArea ??
-              "موقعي الحالي";
+              ForegroundNotificationService.defaultCity;
         }
       } catch (e) {
         log("Error resolving address in background: $e");

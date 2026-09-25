@@ -14,19 +14,26 @@ class LocationCubit extends Cubit<LocationState> {
   void checkLocationOnSplash() async {
     emit(LocationInitial());
 
-    final prefs = await SharedPreferences.getInstance();
-    final double? cachedLat = prefs.getDouble('lat');
-    final double? cachedLng = prefs.getDouble('lng');
-    final String cachedCity = prefs.getString('city_name') ?? "موقعي الحالي";
+    try {
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 2),
+      );
+      final double? cachedLat = prefs.getDouble('lat');
+      final double? cachedLng = prefs.getDouble('lng');
+      final String cachedCity = prefs.getString('city_name') ?? "موقعي الحالي";
 
-    if (cachedLat != null && cachedLng != null) {
-      emit(LocationSuccess(
-        latitude: cachedLat,
-        longitude: cachedLng,
-        isFromCache: true,
-        cityName: cachedCity,
-      ));
-    } else {
+      if (cachedLat != null && cachedLng != null) {
+        emit(LocationSuccess(
+          latitude: cachedLat,
+          longitude: cachedLng,
+          isFromCache: true,
+          cityName: cachedCity,
+        ));
+      } else {
+        emit(LocationRequired());
+      }
+    } catch (e) {
+      dev.log("Error checking location on splash: $e");
       emit(LocationRequired());
     }
   }

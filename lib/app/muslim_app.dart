@@ -7,14 +7,43 @@ import 'package:prayer_times_quran_azkar_app/features/home/logic/cubit/location_
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/logic/cubit/prayer_times_cubit.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/settings_cubit/settings_cubit.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/theme_cubit/theme_cubit.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 import 'package:prayer_times_quran_azkar_app/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-class TotalMuslimApp extends StatelessWidget {
+class TotalMuslimApp extends StatefulWidget {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
   const TotalMuslimApp({super.key});
+
+  @override
+  State<TotalMuslimApp> createState() => _TotalMuslimAppState();
+}
+
+class _TotalMuslimAppState extends State<TotalMuslimApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PrayerAdhanManager.checkPendingAdhanOnResume();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      PrayerAdhanManager.checkPendingAdhanOnResume();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   TextTheme _getSafeTextTheme(String fontFamily, TextTheme baseTextTheme) {
     try {

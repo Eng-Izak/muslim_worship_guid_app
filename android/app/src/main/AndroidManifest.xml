@@ -16,6 +16,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <application
@@ -23,6 +26,9 @@
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true">
+        <meta-data
+            android:name="com.pravera.flutter_foreground_task.notification_icon"
+            android:resource="@mipmap/launcher_icon" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -58,24 +64,16 @@
             </intent-filter>
         </receiver>
 
-        <!-- الخدمة الخلفية المستمرة الخاصة بـ flutter_foreground_task (تبقى تعمل حتى بعد إغلاق التطبيق) -->
+        <!-- الخدمة الخلفية المستمرة الخاصة بـ flutter_foreground_task (تعمل باستمرار وتبقى نشطة دائماً) -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="location"
+            android:foregroundServiceType="specialUse|dataSync"
             android:exported="false"
-            android:stopWithTask="false" />
-
-        <!-- مستقبل إعادة التشغيل لإعادة تفعيل الخدمة الخلفية بعد إعادة تشغيل الجهاز -->
-        <receiver
-            android:name="com.pravera.flutter_foreground_task.service.RestartReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-                <action android:name="QUICKBOOT_POWERON"/>
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
-            </intent-filter>
-        </receiver>
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Continuous prayer times and adhan countdown notification" />
+        </service>
 
         <!-- الخدمة الخلفية الخاصة بـ just_audio_background -->
         <service android:name="com.ryanheise.audioservice.AudioService"

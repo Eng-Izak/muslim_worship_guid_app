@@ -27,14 +27,32 @@ class WindowsWindowListener extends WindowListener {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
-  await initializeDateFormatting('ar', null);
-  await DependencyInjection.init();
 
-  // تهيئة الإشعارات المحلية والخدمات الخلفية عند بدء تشغيل التطبيق
-  final notificationService = DependencyInjection.getIt<NotificationService>();
-  await notificationService.init();
-  await notificationService.requestPermissions();
-  await ForegroundNotificationService.init();
+  try {
+    await initializeDateFormatting('ar', null);
+  } catch (e) {
+    debugPrint("DateFormatting init error: $e");
+  }
+
+  try {
+    await DependencyInjection.init();
+  } catch (e) {
+    debugPrint("DI init error: $e");
+  }
+
+  // تهيئة الإشعارات والخدمات بحماية كاملة وبدون تعطيل الإقلاع (timeouts + try/catch)
+  try {
+    final notificationService = DependencyInjection.getIt<NotificationService>();
+    await notificationService.init().timeout(const Duration(seconds: 3));
+  } catch (e) {
+    debugPrint("NotificationService init error: $e");
+  }
+
+  try {
+    await ForegroundNotificationService.init().timeout(const Duration(seconds: 3));
+  } catch (e) {
+    debugPrint("ForegroundNotificationService init error: $e");
+  }
 
   try {
     await JustAudioBackground.init(
@@ -42,7 +60,7 @@ void main() async {
       androidNotificationChannelName: 'MuslimWorshipGuid - Audio',
       androidNotificationOngoing: true,
       androidNotificationIcon: 'mipmap/launcher_icon',
-    );
+    ).timeout(const Duration(seconds: 2));
   } catch (e) {
     debugPrint("JustAudioBackground initialization skipped or failed: $e");
   }
@@ -57,18 +75,23 @@ void main() async {
   }
 
   Bloc.observer = StatesObserver();
-  await Hive.initFlutter();
-  await Hive.openBox('settings_box');
+
+  try {
+    await Hive.initFlutter();
+    await Hive.openBox('settings_box');
+  } catch (e) {
+    debugPrint("Hive initialization error: $e");
+  }
 
   runApp(const TotalMuslimApp());
 
-  // تطبيق حدود وتأطير النافذة وإبقائها شغالاً بالخلفية 24/7 بعد الإغلاق
+  // تطبيق حدود وتأطير النافذة لنظام الويندوز بعد ظهور التطبيق
   if (!kIsWeb && Platform.isWindows) {
     try {
       const WindowOptions windowOptions = WindowOptions(
         size: Size(1100, 750),
-        minimumSize: Size(420, 680), // مستوى أقل أبعاد لا يمكن تقليل النافذة عنه
-        maximumSize: Size(1350, 950), // مستوى أكبر أبعاد لا يمكن تكبير النافذة عنه
+        minimumSize: Size(420, 680),
+        maximumSize: Size(1350, 950),
         center: true,
         skipTaskbar: false,
         title: 'دليل عبادات المسلم',

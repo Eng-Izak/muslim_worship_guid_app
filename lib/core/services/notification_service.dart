@@ -12,6 +12,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prayer_times_quran_azkar_app/app/muslim_app.dart';
 import 'package:prayer_times_quran_azkar_app/core/routing/routing_names.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
@@ -88,13 +89,10 @@ class NotificationService {
               final prefs = await SharedPreferences.getInstance();
               final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
 
-              TotalMuslimApp.navigatorKey.currentState?.pushNamed(
-                RoutingNames.adhanAlarm.route,
-                arguments: {
-                  'prayerName': name,
-                  'prayerTime': time,
-                  'cityName': cityName,
-                },
+              PrayerAdhanManager.triggerAdhanScreen(
+                prayerName: name,
+                prayerTime: time,
+                cityName: cityName,
               );
             }
           }
@@ -117,13 +115,10 @@ class NotificationService {
               final prefs = await SharedPreferences.getInstance();
               final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
 
-              TotalMuslimApp.navigatorKey.currentState?.pushNamed(
-                RoutingNames.adhanAlarm.route,
-                arguments: {
-                  'prayerName': name,
-                  'prayerTime': time,
-                  'cityName': cityName,
-                },
+              PrayerAdhanManager.triggerAdhanScreen(
+                prayerName: name,
+                prayerTime: time,
+                cityName: cityName,
               );
             }
           });
@@ -348,25 +343,34 @@ class NotificationService {
         body: body,
         scheduledDate: tzScheduledTime,
         notificationDetails: platformDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
         payload: payload,
       );
     } on PlatformException catch (e) {
-      if (e.code == 'exact_alarms_not_permitted') {
-        log(
-          "Exact alarms not permitted. Falling back to inexact scheduling for notification $id.",
-        );
+      log("Exact alarmClock failed or restricted ($e), trying exactAllowWhileIdle fallback...");
+      try {
         await _notificationsPlugin.zonedSchedule(
           id: id,
           title: title,
           body: body,
           scheduledDate: tzScheduledTime,
           notificationDetails: platformDetails,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           payload: payload,
         );
-      } else {
-        log("Scheduled notification handled by desktop timers: $e");
+      } catch (fallbackError) {
+        log("Falling back to inexact scheduling for notification $id: $fallbackError");
+        try {
+          await _notificationsPlugin.zonedSchedule(
+            id: id,
+            title: title,
+            body: body,
+            scheduledDate: tzScheduledTime,
+            notificationDetails: platformDetails,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            payload: payload,
+          );
+        } catch (_) {}
       }
     } catch (e) {
       log("Error scheduling notification: $e");

@@ -4,6 +4,8 @@ import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 
+import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
+
 class AdhanAlarmScreen extends StatefulWidget {
   final String prayerName;
   final String prayerTime;
@@ -28,6 +30,7 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
   @override
   void initState() {
     super.initState();
+    PrayerAdhanManager.isAdhanScreenOpen = true;
     
     // إعداد حركة النبض الدائرية حول شعار المسجد
     _animationController = AnimationController(
@@ -99,6 +102,8 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
 
   @override
   void dispose() {
+    PrayerAdhanManager.isAdhanScreenOpen = false;
+    _audioPlayer.stop();
     _animationController.dispose();
     super.dispose();
   }
