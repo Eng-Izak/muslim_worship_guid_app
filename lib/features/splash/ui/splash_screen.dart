@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/logic/cubit/prayer_times_cubit.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
+import 'package:prayer_times_quran_azkar_app/core/shared/widgets/location_disclosure_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -120,6 +121,9 @@ class _SplashScreenState extends State<SplashScreen> {
                   longitude: state.longitude,
                   cityName: state.cityName,
                 );
+              } else if (state is LocationRequired || state is LocationFailure) {
+                // إلغاء مؤقت الانتقال التلقائي لإتاحة الفرصة للمستخدم لقراءة الإفصاح البارز
+                _safetyTimer?.cancel();
               }
             },
           ),
@@ -138,71 +142,14 @@ class _SplashScreenState extends State<SplashScreen> {
         ],
         child: BlocBuilder<LocationCubit, LocationState>(
           builder: (context, state) {
-            // إذا كان الكاش فارغاً تماماً في أول تشغيل، نعرض زر طلب تفعيل الموقع
+            // إظهار الإفصاح البارز الكامل المطابق لسياسات Google Play
             if (state is LocationRequired || state is LocationFailure) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        color: ThemingColors.kIconColor(context),
-                        size: 64,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        state is LocationFailure
-                            ? state.errorMessage
-                            : "تطبيق دليل عبادات المسلم يحتاج لتحديد موقعك لحساب مواقيت الصلاة بدقة.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: ThemingColors.kTextMain(context),
-                          fontSize: context.setSp(16),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD4AF37),
-                          foregroundColor: const Color(0xFF0D4F3C),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {
-                          context
-                              .read<LocationCubit>()
-                              .fetchAndSaveCurrentLocation();
-                        },
-                        icon: const Icon(Icons.gps_fixed_rounded),
-                        label: const Text(
-                          "تحديد الموقع تلقائياً",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: _navigateToHome,
-                        child: Text(
-                          "المتابعة للشاشة الرئيسية",
-                          style: TextStyle(
-                            color: ThemingColors.kTextSecondary(context),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              return LocationDisclosureCard(
+                errorMessage: state is LocationFailure ? state.errorMessage : null,
+                onAccept: () {
+                  context.read<LocationCubit>().fetchAndSaveCurrentLocation();
+                },
+                onDecline: _navigateToHome,
               );
             }
 

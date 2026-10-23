@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/routing/routing_names.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
+import 'package:prayer_times_quran_azkar_app/core/shared/widgets/location_disclosure_dialog.dart';
 import 'package:prayer_times_quran_azkar_app/features/home/logic/cubit/location_cubit.dart';
 
 class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
@@ -67,10 +68,13 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                 size: iconSize,
               ),
               tooltip: 'تحديث الموقع الجغرافي الحالي',
-              onPressed: () {
-                // استدعاء الدالة الحية من الكيوبت مباشرة عند الضغط
-                context.read<LocationCubit>().fetchAndSaveCurrentLocation();
-                // ملحوظة: تأكد من استخدام اسم الدالة الحالي في الكيوبت لديك (مثل fetchAndSaveCurrentLocation أو updateCurrentLocation)
+              onPressed: () async {
+                // إظهار الإفصاح البارز في حال لم تكن الصلاحية ممنوحة مسبقاً وفقاً لسياسات Google Play
+                final bool hasPermission =
+                    await LocationDisclosureDialog.requestWithDisclosure(context);
+                if (hasPermission && context.mounted) {
+                  context.read<LocationCubit>().fetchAndSaveCurrentLocation();
+                }
               },
             );
           },
