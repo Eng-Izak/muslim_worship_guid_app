@@ -48,16 +48,18 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
     try {
       await _audioPlayer.stop();
       final settingsBox = Hive.box('settings_box');
-      // الحصول على صوت الأذان المختار
-      final String adhanVoice =
-          settingsBox.get('adhan_voice', defaultValue: 'custom');
 
-      String audioPath = settingsBox.get(
-        'selected_azan_path',
-        defaultValue: 'assets/audio/azan/a (1).mp3',
-      );
-      if (adhanVoice == 'fajr' || widget.prayerName == 'الفجر') {
-        audioPath = 'assets/audio/azan_fagr/f (1).mp3';
+      String audioPath;
+      if (widget.prayerName == 'الفجر') {
+        audioPath = settingsBox.get(
+          'selected_fajr_azan_path',
+          defaultValue: 'assets/audio/azan_fagr/f (1).mp3',
+        );
+      } else {
+        audioPath = settingsBox.get(
+          'selected_azan_path',
+          defaultValue: 'assets/audio/azan/a (1).mp3',
+        );
       }
       if (audioPath == 'assets/audio/adhan.mp3') {
         audioPath = 'assets/audio/azan/a (1).mp3';

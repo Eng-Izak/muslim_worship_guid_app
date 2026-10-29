@@ -41,11 +41,9 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
 
     return ValueListenableBuilder(
       valueListenable: settingsBox.listenable(
-        keys: ['adhan_voice', 'selected_azan_path', 'selected_fajr_azan_path'],
+        keys: ['selected_azan_path', 'selected_fajr_azan_path'],
       ),
       builder: (context, Box box, _) {
-        final currentVoice = box.get('adhan_voice', defaultValue: 'custom');
-        final isFajrSelected = currentVoice == 'fajr';
         final selectedAzanPath = box.get(
           'selected_azan_path',
           defaultValue: 'assets/audio/azan/a (1).mp3',
@@ -93,38 +91,36 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildVoiceButton(
-                    context: context,
-                    icon: Icons.mosque_rounded,
-                    label: Localization.tr(
-                      context,
-                      ar: 'تخصيص الأذان',
-                      en: 'Customize Adhan',
+                  Expanded(
+                    child: _buildVoiceButton(
+                      context: context,
+                      icon: Icons.mosque_rounded,
+                      label: Localization.tr(
+                        context,
+                        ar: 'تخصيص الأذان',
+                        en: 'Customize Adhan',
+                      ),
+                      subtitle:
+                          _getSelectedVoiceLabel(context, selectedAzanPath),
+                      onTap: () =>
+                          AdhanVoiceSelectionSheet.show(context, isFajr: false),
                     ),
-                    subtitle:
-                        _getSelectedVoiceLabel(context, selectedAzanPath),
-                    isSelected: !isFajrSelected,
-                    onTap: () {
-                      box.put('adhan_voice', 'custom');
-                      AdhanVoiceSelectionSheet.show(context, isFajr: false);
-                    },
                   ),
-                  _buildVoiceButton(
-                    context: context,
-                    icon: Icons.alarm_on_rounded,
-                    label: Localization.tr(
-                      context,
-                      ar: 'أذان الفجر المخصص',
-                      en: 'Fajr Adhan',
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildVoiceButton(
+                      context: context,
+                      icon: Icons.alarm_on_rounded,
+                      label: Localization.tr(
+                        context,
+                        ar: 'أذان الفجر المخصص',
+                        en: 'Fajr Adhan',
+                      ),
+                      subtitle: _getFajrVoiceLabel(context, selectedFajrPath),
+                      onTap: () =>
+                          AdhanVoiceSelectionSheet.show(context, isFajr: true),
                     ),
-                    subtitle: _getFajrVoiceLabel(context, selectedFajrPath),
-                    isSelected: isFajrSelected,
-                    onTap: () {
-                      box.put('adhan_voice', 'fajr');
-                      AdhanVoiceSelectionSheet.show(context, isFajr: true);
-                    },
                   ),
                 ],
               ),
@@ -139,64 +135,97 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
     required BuildContext context,
     required IconData icon,
     required String label,
-    required bool isSelected,
+    required String subtitle,
     required VoidCallback onTap,
-    String? subtitle,
   }) {
-    final bgColor = isSelected
-        ? ThemingColors.kActiveBackground(context)
-        : ThemingColors.kUnselectedBackground(context);
-
-    final contentColor = isSelected
-        ? ThemingColors.kActiveTextIcon(context)
-        : ThemingColors.kUnselectedTextIcon(context);
-
-    final borderColor = isSelected
-        ? ThemingColors.kActiveBackground(context)
-        : ThemingColors.kUnselectedBorder(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.4,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
+          color: ThemingColors.kSpecialContainerBackground(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: ThemingColors.kCardBorder(context),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: contentColor,
-              size: 24,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: ThemingColors.kAccent(context).withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: ThemingColors.kAccent(context),
+                size: 24,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: contentColor,
+                fontWeight: FontWeight.bold,
+                color: ThemingColors.kTextMain(context),
               ),
             ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: contentColor.withValues(alpha: 0.85),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: ThemingColors.kAccent(context).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: ThemingColors.kAccent(context).withValues(alpha: 0.25),
+                  width: 0.8,
                 ),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 11,
+                    color: ThemingColors.kAccent(context),
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: ThemingColors.kTextAccent(context),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

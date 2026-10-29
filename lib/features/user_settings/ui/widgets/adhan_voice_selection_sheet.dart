@@ -245,7 +245,7 @@ class _AdhanVoiceSelectionSheetState extends State<AdhanVoiceSelectionSheet> {
 
     return ValueListenableBuilder(
       valueListenable: settingsBox.listenable(
-        keys: [hiveKey, 'adhan_voice'],
+        keys: [hiveKey],
       ),
       builder: (context, Box box, _) {
         final currentSelected = box.get(
@@ -396,11 +396,6 @@ class _AdhanVoiceSelectionSheetState extends State<AdhanVoiceSelectionSheet> {
                           isPlaying: isThisPlaying,
                           onSelect: () {
                             box.put(hiveKey, path);
-                            if (widget.isFajr) {
-                              box.put('adhan_voice', 'fajr');
-                            } else {
-                              box.put('adhan_voice', 'custom');
-                            }
                           },
                           onTogglePlay: () => _togglePlay(path, title),
                         );
