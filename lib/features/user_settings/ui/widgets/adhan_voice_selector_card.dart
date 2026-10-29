@@ -2,18 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
+import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/adhan_voice_selection_sheet.dart';
 
 class AdhanVoiceSelectorCard extends StatelessWidget {
   const AdhanVoiceSelectorCard({super.key});
+
+  String _getSelectedVoiceLabel(BuildContext context, String path) {
+    final fileName = path.split('/').last.replaceAll('.mp3', '');
+    final match = RegExp(r'a\s*\((\d+)\)').firstMatch(fileName);
+    if (match != null) {
+      final num = match.group(1);
+      return Localization.tr(
+        context,
+        ar: 'صوت $num',
+        en: 'Voice $num',
+      );
+    }
+    return fileName;
+  }
+
+  String _getFajrVoiceLabel(BuildContext context, String path) {
+    final fileName = path.split('/').last.replaceAll('.mp3', '');
+    final match = RegExp(r'f\s*\((\d+)\)').firstMatch(fileName);
+    if (match != null) {
+      final num = match.group(1);
+      return Localization.tr(
+        context,
+        ar: 'فجر $num',
+        en: 'Fajr $num',
+      );
+    }
+    return fileName;
+  }
 
   @override
   Widget build(BuildContext context) {
     final settingsBox = Hive.box('settings_box');
 
     return ValueListenableBuilder(
-      valueListenable: settingsBox.listenable(keys: ['adhan_voice']),
+      valueListenable: settingsBox.listenable(
+        keys: ['adhan_voice', 'selected_azan_path', 'selected_fajr_azan_path'],
+      ),
       builder: (context, Box box, _) {
-        final currentVoice = box.get('adhan_voice', defaultValue: 'makkah');
+        final currentVoice = box.get('adhan_voice', defaultValue: 'custom');
+        final isFajrSelected = currentVoice == 'fajr';
+        final selectedAzanPath = box.get(
+          'selected_azan_path',
+          defaultValue: 'assets/audio/azan/a (1).mp3',
+        );
+        final selectedFajrPath = box.get(
+          'selected_fajr_azan_path',
+          defaultValue: 'assets/audio/azan_fagr/f (1).mp3',
+        );
 
         return Container(
           decoration: BoxDecoration(
@@ -56,28 +96,35 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildVoiceButton(
-                    context,
-                    'makkah',
-                    Icons.mosque_rounded,
-                    Localization.tr(
+                    context: context,
+                    icon: Icons.mosque_rounded,
+                    label: Localization.tr(
                       context,
-                      ar: 'أذان مكة المكرمة',
-                      en: 'Mecca Adhan',
+                      ar: 'تخصيص الأذان',
+                      en: 'Customize Adhan',
                     ),
-                    currentVoice == 'makkah',
-                    box,
+                    subtitle:
+                        _getSelectedVoiceLabel(context, selectedAzanPath),
+                    isSelected: !isFajrSelected,
+                    onTap: () {
+                      box.put('adhan_voice', 'custom');
+                      AdhanVoiceSelectionSheet.show(context, isFajr: false);
+                    },
                   ),
                   _buildVoiceButton(
-                    context,
-                    'fajr',
-                    Icons.alarm_on_rounded,
-                    Localization.tr(
+                    context: context,
+                    icon: Icons.alarm_on_rounded,
+                    label: Localization.tr(
                       context,
                       ar: 'أذان الفجر المخصص',
                       en: 'Fajr Adhan',
                     ),
-                    currentVoice == 'fajr',
-                    box,
+                    subtitle: _getFajrVoiceLabel(context, selectedFajrPath),
+                    isSelected: isFajrSelected,
+                    onTap: () {
+                      box.put('adhan_voice', 'fajr');
+                      AdhanVoiceSelectionSheet.show(context, isFajr: true);
+                    },
                   ),
                 ],
               ),
@@ -88,14 +135,14 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
     );
   }
 
-  Widget _buildVoiceButton(
-    BuildContext context,
-    String voiceValue,
-    IconData icon,
-    String label,
-    bool isSelected,
-    Box box,
-  ) {
+  Widget _buildVoiceButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    String? subtitle,
+  }) {
     final bgColor = isSelected
         ? ThemingColors.kActiveBackground(context)
         : ThemingColors.kUnselectedBackground(context);
@@ -109,7 +156,7 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
         : ThemingColors.kUnselectedBorder(context);
 
     return InkWell(
-      onTap: () => box.put('adhan_voice', voiceValue),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.4,
@@ -137,6 +184,19 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
                 color: contentColor,
               ),
             ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: contentColor.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
           ],
         ),
       ),

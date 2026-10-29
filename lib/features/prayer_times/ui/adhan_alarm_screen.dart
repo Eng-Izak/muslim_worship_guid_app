@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 
 import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
@@ -46,21 +48,32 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
     try {
       await _audioPlayer.stop();
       final settingsBox = Hive.box('settings_box');
-      // الحصول على صوت الأذان المختار: 'makkah' أو 'fajr'
-      final String adhanVoice = settingsBox.get('adhan_voice', defaultValue: 'makkah');
-      
-      String audioPath = 'assets/audio/adhan.mp3';
+      // الحصول على صوت الأذان المختار
+      final String adhanVoice =
+          settingsBox.get('adhan_voice', defaultValue: 'custom');
+
+      String audioPath = settingsBox.get(
+        'selected_azan_path',
+        defaultValue: 'assets/audio/azan/a (1).mp3',
+      );
       if (adhanVoice == 'fajr' || widget.prayerName == 'الفجر') {
-        audioPath = 'assets/audio/adhan_fajr.mp3';
+        audioPath = 'assets/audio/azan_fagr/f (1).mp3';
+      }
+      if (audioPath == 'assets/audio/adhan.mp3') {
+        audioPath = 'assets/audio/azan/a (1).mp3';
+      }
+      if (audioPath == 'assets/audio/adhan_fajr.mp3') {
+        audioPath = 'assets/audio/azan_fagr/f (1).mp3';
       }
 
-      try {
-        await _audioPlayer.setAsset(audioPath);
-      } catch (assetError) {
-        debugPrint("setAsset failed, loading audio via Uri fallback: $assetError");
-        await _audioPlayer.setAudioSource(
-          AudioSource.uri(Uri.parse('asset:///$audioPath')),
-        );
+      if (!audioPath.contains(' ') && !audioPath.contains('(')) {
+        try {
+          await _audioPlayer.setAsset(audioPath);
+        } catch (_) {
+          await _loadAndPlayViaTempFile(audioPath);
+        }
+      } else {
+        await _loadAndPlayViaTempFile(audioPath);
       }
 
       await _audioPlayer.setVolume(1.0);
@@ -68,6 +81,30 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
     } catch (e) {
       debugPrint("Error playing Adhan: $e");
     }
+  }
+
+  Future<void> _loadAndPlayViaTempFile(String path) async {
+    final byteData = await rootBundle.load(path);
+    final sanitizedFileName =
+        path.split('/').last.replaceAll(RegExp(r'[^a-zA-Z0-9._]'), '_');
+    final tempFile = File('${Directory.systemTemp.path}/$sanitizedFileName');
+    if (!await tempFile.exists() ||
+        (await tempFile.length()) != byteData.lengthInBytes) {
+      await tempFile.writeAsBytes(
+        byteData.buffer.asUint8List(),
+        flush: true,
+      );
+    }
+    final audioSource = AudioSource.file(
+      tempFile.path,
+      tag: MediaItem(
+        id: 'adhan_alarm_${widget.prayerName}',
+        title: 'أذان صلاة ${widget.prayerName}',
+        album: 'الأذان',
+        artist: widget.cityName,
+      ),
+    );
+    await _audioPlayer.setAudioSource(audioSource);
   }
 
   /// إيقاف تشغيل الأذان وإغلاق الشاشة

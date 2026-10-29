@@ -70,3 +70,6 @@ flutter:
     - assets/json/azkars.json.gz
     - assets/json/radio_stations.json.gz
     - assets/audio/
+    - assets/audio/azan/
+    - assets/audio/azan_fagr/
+    - assets/audio/tazkir/
