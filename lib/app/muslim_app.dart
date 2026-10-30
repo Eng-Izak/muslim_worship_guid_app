@@ -15,7 +15,10 @@ class TotalMuslimApp extends StatefulWidget {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
-  const TotalMuslimApp({super.key});
+  /// بيانات الأذان المؤكدة والمفحوصة صلاحيتها عند الإقلاع للظهور الفوري الحصري
+  final Map<String, dynamic>? initialPendingAdhan;
+
+  const TotalMuslimApp({super.key, this.initialPendingAdhan});
 
   @override
   State<TotalMuslimApp> createState() => _TotalMuslimAppState();
@@ -27,9 +30,11 @@ class _TotalMuslimAppState extends State<TotalMuslimApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      PrayerAdhanManager.checkPendingAdhanOnResume();
-    });
+    if (widget.initialPendingAdhan == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        PrayerAdhanManager.checkPendingAdhanOnResume();
+      });
+    }
   }
 
   @override
@@ -165,8 +170,24 @@ class _TotalMuslimAppState extends State<TotalMuslimApp>
                         ),
                   ),
                   themeMode: themeMode,
-                  initialRoute: RoutingNames.splash.route,
-                  onGenerateRoute: RoutingRouter.onGenerateRoute,
+                  // 🛡️ حماية صارمة: إذا أُطلق التطبيق من الخلفية عند وقت الأذان،
+                  // تفتح شاشة الأذان فقط وبشكل فوري وحصري دون تحميل Splash أو Home.
+                  initialRoute: widget.initialPendingAdhan != null
+                      ? RoutingNames.adhanAlarm.route
+                      : RoutingNames.splash.route,
+                  onGenerateRoute: (settings) {
+                    if (widget.initialPendingAdhan != null &&
+                        settings.name == RoutingNames.adhanAlarm.route &&
+                        settings.arguments == null) {
+                      return RoutingRouter.onGenerateRoute(
+                        RouteSettings(
+                          name: settings.name,
+                          arguments: widget.initialPendingAdhan,
+                        ),
+                      );
+                    }
+                    return RoutingRouter.onGenerateRoute(settings);
+                  },
                 ),
               );
             },

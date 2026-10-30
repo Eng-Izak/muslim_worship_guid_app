@@ -12,6 +12,7 @@ import 'package:prayer_times_quran_azkar_app/app/muslim_app.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 
 class WindowsWindowListener extends WindowListener {
@@ -83,7 +84,15 @@ void main() async {
     debugPrint("Hive initialization error: $e");
   }
 
-  runApp(const TotalMuslimApp());
+  // 🛡️ حماية صارمة: فحص ما إذا كان التطبيق أُطلق فورياً لنداء أذان قائم وصالح
+  Map<String, dynamic>? initialPendingAdhan;
+  try {
+    initialPendingAdhan = await PrayerAdhanManager.getPendingAdhanIfValid();
+  } catch (e) {
+    debugPrint("Error checking pending adhan on launch: $e");
+  }
+
+  runApp(TotalMuslimApp(initialPendingAdhan: initialPendingAdhan));
 
   // تطبيق حدود وتأطير النافذة لنظام الويندوز بعد ظهور التطبيق
   if (!kIsWeb && Platform.isWindows) {

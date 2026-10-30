@@ -10,8 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:prayer_times_quran_azkar_app/app/muslim_app.dart';
-import 'package:prayer_times_quran_azkar_app/core/routing/routing_names.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 
 class NotificationService {
@@ -93,6 +91,7 @@ class NotificationService {
                 prayerName: name,
                 prayerTime: time,
                 cityName: cityName,
+                isStandalone: true,
               );
             }
           }
@@ -119,6 +118,7 @@ class NotificationService {
                 prayerName: name,
                 prayerTime: time,
                 cityName: cityName,
+                isStandalone: true,
               );
             }
           });
@@ -259,7 +259,7 @@ class NotificationService {
             payload: payload,
           );
 
-          // 3. فتح شاشة الأذان الكاملة
+          // 3. فتح شاشة الأذان الكاملة عبر المدير المركزي لتفادي التكرار والتراكم
           if (payload != null && payload.startsWith('adhan_alarm')) {
             final parts = payload.split('|');
             if (parts.length >= 3) {
@@ -268,13 +268,11 @@ class NotificationService {
               final prefs = await SharedPreferences.getInstance();
               final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
 
-              TotalMuslimApp.navigatorKey.currentState?.pushNamed(
-                RoutingNames.adhanAlarm.route,
-                arguments: {
-                  'prayerName': name,
-                  'prayerTime': time,
-                  'cityName': cityName,
-                },
+              PrayerAdhanManager.triggerAdhanScreen(
+                prayerName: name,
+                prayerTime: time,
+                cityName: cityName,
+                isStandalone: true,
               );
             }
           }

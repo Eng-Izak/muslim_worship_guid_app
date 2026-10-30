@@ -148,6 +148,8 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
                       prayerName: 'الفجر',
                       prayerTime: '05:00 ص',
                       cityName: 'موقعي الحالي',
+                      isStandalone: false,
+                      isPreview: true,
                     );
                   },
                 ),
@@ -203,6 +205,8 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
                       prayerName: 'الظهر',
                       prayerTime: '12:30 م',
                       cityName: 'موقعي الحالي',
+                      isStandalone: false,
+                      isPreview: true,
                     );
                   },
                 ),

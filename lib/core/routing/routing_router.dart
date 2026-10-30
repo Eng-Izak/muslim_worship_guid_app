@@ -11,7 +11,6 @@ import 'package:prayer_times_quran_azkar_app/features/quran/ui/quran_screen.dart
 import 'package:prayer_times_quran_azkar_app/features/radio/ui/radio_screen.dart';
 import 'package:prayer_times_quran_azkar_app/features/splash/ui/splash_screen.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/user_settings_screen.dart';
-
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/ui/adhan_alarm_screen.dart';
 
 class RoutingRouter {
@@ -48,6 +47,8 @@ class RoutingRouter {
             prayerName: args['prayerName'] ?? 'الصلاة',
             prayerTime: args['prayerTime'] ?? '00:00',
             cityName: args['cityName'] ?? 'موقعي الحالي',
+            isStandalone: args['isStandalone'] ?? false,
+            isPreview: args['isPreview'] ?? false,
           ),
         );
 

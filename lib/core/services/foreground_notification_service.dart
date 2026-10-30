@@ -379,15 +379,27 @@ class NotificationTaskHandler extends TaskHandler {
         if (diffInSeconds >= 0 && diffInSeconds <= 90) {
           final prefs = await SharedPreferences.getInstance();
           final String todayKey = '${now.year}-${now.month}-${now.day}_$name';
+          final List<String> triggeredList =
+              prefs.getStringList('triggered_adhans_today') ?? [];
           final String? lastTriggered =
               prefs.getString('last_adhan_triggered_key');
 
-          if (lastTriggered != todayKey) {
+          if (lastTriggered != todayKey && !triggeredList.contains(todayKey)) {
             await prefs.setString('last_adhan_triggered_key', todayKey);
+
+            // تسجيل الأذان في قائمة اليوم لمنع التكرار (متوافق مع PrayerAdhanManager)
+            triggeredList.add(todayKey);
+            await prefs.setStringList('triggered_adhans_today', triggeredList);
+
             await prefs.setString('active_adhan_prayer', name);
             await prefs.setString(
               'active_adhan_time',
               DateFormat('hh:mm a', 'ar').format(time.toLocal()),
+            );
+            // حفظ الطابع الزمني للتحقق من صلاحية الأذان عند استعادة التطبيق
+            await prefs.setInt(
+              'active_adhan_timestamp',
+              time.millisecondsSinceEpoch,
             );
 
             log("🚨 [Background Task] حان موعد صلاة $name! إيقاظ الشاشة وإطلاق شاشة الأذان...");
