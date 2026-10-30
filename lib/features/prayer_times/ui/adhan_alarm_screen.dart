@@ -28,6 +28,7 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
     with SingleTickerProviderStateMixin {
   final AudioPlayer _audioPlayer = DependencyInjection.getIt<AudioPlayer>();
   late AnimationController _animationController;
+  String _currentVoiceTitle = '';
 
   @override
   void initState() {
@@ -43,24 +44,49 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
     _playAdhan();
   }
 
+  String _getVoiceNameFromPath(String path, bool isFajr) {
+    final fileName = path.split('/').last.replaceAll('.mp3', '');
+    final matchFajr = RegExp(r'f\s*\((\d+)\)').firstMatch(fileName);
+    if (matchFajr != null) {
+      return 'أذان الفجر ${matchFajr.group(1)}';
+    }
+    final matchGeneral = RegExp(r'a\s*\((\d+)\)').firstMatch(fileName);
+    if (matchGeneral != null) {
+      return 'صوت الأذان ${matchGeneral.group(1)}';
+    }
+    return fileName;
+  }
+
   /// تشغيل صوت الأذان بناءً على اختيار المستخدم
   Future<void> _playAdhan() async {
     try {
       await _audioPlayer.stop();
-      final settingsBox = Hive.box('settings_box');
+      final settingsBox = Hive.isBoxOpen('settings_box')
+          ? Hive.box('settings_box')
+          : await Hive.openBox('settings_box');
+
+      // تحديد هل الصلاة الحالية هي صلاة الفجر
+      final cleanName = widget.prayerName.trim();
+      final bool isFajr = cleanName == 'الفجر' ||
+          cleanName.contains('فجر') ||
+          cleanName.toLowerCase().contains('fajr');
 
       String audioPath;
-      if (widget.prayerName == 'الفجر') {
+      if (isFajr) {
+        // في صلاة الفجر: الربط التلقائي بأذان الفجر المخصص
         audioPath = settingsBox.get(
           'selected_fajr_azan_path',
           defaultValue: 'assets/audio/azan_fagr/f (1).mp3',
         );
       } else {
+        // في سائر الصلوات: الربط بالأذان العام المخصص
         audioPath = settingsBox.get(
           'selected_azan_path',
           defaultValue: 'assets/audio/azan/a (1).mp3',
         );
       }
+
+      // حماية احتياطية في حال كانت المسارات القديمة محفوظة في الـ Cache
       if (audioPath == 'assets/audio/adhan.mp3') {
         audioPath = 'assets/audio/azan/a (1).mp3';
       }
@@ -68,16 +94,13 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
         audioPath = 'assets/audio/azan_fagr/f (1).mp3';
       }
 
-      if (!audioPath.contains(' ') && !audioPath.contains('(')) {
-        try {
-          await _audioPlayer.setAsset(audioPath);
-        } catch (_) {
-          await _loadAndPlayViaTempFile(audioPath);
-        }
-      } else {
-        await _loadAndPlayViaTempFile(audioPath);
+      if (mounted) {
+        setState(() {
+          _currentVoiceTitle = _getVoiceNameFromPath(audioPath, isFajr);
+        });
       }
 
+      await _loadAndPlayViaTempFile(audioPath);
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.play();
     } catch (e) {
@@ -100,7 +123,7 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
     final audioSource = AudioSource.file(
       tempFile.path,
       tag: MediaItem(
-        id: 'adhan_alarm_${widget.prayerName}',
+        id: 'adhan_alarm_${DateTime.now().millisecondsSinceEpoch}',
         title: 'أذان صلاة ${widget.prayerName}',
         album: 'الأذان',
         artist: widget.cityName,
@@ -257,7 +280,7 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
                 ),
               ),
 
-              // 3. الجزء النصي: تفاصيل الصلاة والمدينة
+              // 3. الجزء النصي: تفاصيل الصلاة والمدينة والصوت المختار
               Column(
                 children: [
                   Text(
@@ -276,6 +299,43 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
                       fontSize: 18,
                     ),
                   ),
+                  if (_currentVoiceTitle.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.volume_up_rounded,
+                            color: Color(0xFFD4AF37),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _currentVoiceTitle,
+                            style: const TextStyle(
+                              color: Color(0xFFD4AF37),
+                              fontSize: 14,
+                              fontFamily: 'Cairo',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
 

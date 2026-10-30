@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/features/user_settings/ui/widgets/adhan_voice_selection_sheet.dart';
@@ -33,6 +34,185 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
       );
     }
     return fileName;
+  }
+
+  void _showTestAdhanDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetContext) {
+        final isDark =
+            Theme.of(bottomSheetContext).brightness == Brightness.dark;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          decoration: BoxDecoration(
+            color: ThemingColors.kCardBackground(bottomSheetContext),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(
+                color: ThemingColors.kCardBorder(bottomSheetContext),
+                width: 1.5,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  Localization.tr(
+                    bottomSheetContext,
+                    ar: 'معاينة شاشة الأذان',
+                    en: 'Preview Adhan Screen',
+                  ),
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: ThemingColors.kTextMain(bottomSheetContext),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  Localization.tr(
+                    bottomSheetContext,
+                    ar: 'اختر الصلاة لمعاينة شاشة التنبيه بالصوت المخصص لها',
+                    en: 'Choose prayer to preview screen with its custom voice',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 12,
+                    color: ThemingColors.kTextSecondary(bottomSheetContext),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: ThemingColors.kAccent(bottomSheetContext)
+                          .withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.alarm_on_rounded,
+                      color: ThemingColors.kAccent(bottomSheetContext),
+                    ),
+                  ),
+                  title: Text(
+                    Localization.tr(
+                      bottomSheetContext,
+                      ar: 'معاينة أذان الفجر (أذان الفجر المخصص)',
+                      en: 'Preview Fajr Adhan (Custom Fajr Voice)',
+                    ),
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: ThemingColors.kTextMain(bottomSheetContext),
+                    ),
+                  ),
+                  subtitle: Text(
+                    Localization.tr(
+                      bottomSheetContext,
+                      ar: 'تشغيل الصوت المحدد في أذان الفجر المخصص',
+                      en: 'Plays the voice set in Custom Fajr Adhan',
+                    ),
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11,
+                      color: ThemingColors.kTextSecondary(bottomSheetContext),
+                    ),
+                  ),
+                  trailing:
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                        color: ThemingColors.kCardBorder(bottomSheetContext)),
+                  ),
+                  onTap: () {
+                    Navigator.pop(bottomSheetContext);
+                    PrayerAdhanManager.triggerAdhanScreen(
+                      prayerName: 'الفجر',
+                      prayerTime: '05:00 ص',
+                      cityName: 'موقعي الحالي',
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: ThemingColors.kAccent(bottomSheetContext)
+                          .withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.mosque_rounded,
+                      color: ThemingColors.kAccent(bottomSheetContext),
+                    ),
+                  ),
+                  title: Text(
+                    Localization.tr(
+                      bottomSheetContext,
+                      ar: 'معاينة الأذان العام (الصلوات الخمس)',
+                      en: 'Preview General Adhan (All Prayers)',
+                    ),
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: ThemingColors.kTextMain(bottomSheetContext),
+                    ),
+                  ),
+                  subtitle: Text(
+                    Localization.tr(
+                      bottomSheetContext,
+                      ar: 'تشغيل الصوت المحدد في تخصيص الأذان',
+                      en: 'Plays the voice set in Customize Adhan',
+                    ),
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11,
+                      color: ThemingColors.kTextSecondary(bottomSheetContext),
+                    ),
+                  ),
+                  trailing:
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                        color: ThemingColors.kCardBorder(bottomSheetContext)),
+                  ),
+                  onTap: () {
+                    Navigator.pop(bottomSheetContext);
+                    PrayerAdhanManager.triggerAdhanScreen(
+                      prayerName: 'الظهر',
+                      prayerTime: '12:30 م',
+                      cityName: 'موقعي الحالي',
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -123,6 +303,53 @@ class AdhanVoiceSelectorCard extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 14),
+              Center(
+                child: InkWell(
+                  onTap: () => _showTestAdhanDialog(context),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          ThemingColors.kAccent(context).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: ThemingColors.kAccent(context)
+                            .withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.play_circle_outline_rounded,
+                          size: 16,
+                          color: ThemingColors.kAccent(context),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          Localization.tr(
+                            context,
+                            ar: 'معاينة شاشة تنبيه الأذان',
+                            en: 'Preview Adhan Screen',
+                          ),
+                          style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: ThemingColors.kTextAccent(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
