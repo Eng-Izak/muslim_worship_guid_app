@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:bloc/bloc.dart';
+import 'package:hive/hive.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer';
@@ -253,30 +253,63 @@ class PrayerCubit extends Cubit<PrayerStates> {
     }
   }
 
-  /// جدولة إشعارات الصلوات الخمس لليوم
+  /// إعادة جدولة الصلوات والتذكيرات عند تحديث إعدادات المستخدم
+  void reschedulePrayers() {
+    if (_currentCoordinates != null) {
+      final now = DateTime.now();
+      final prayerTimes = PrayerTimes(
+        date: now,
+        coordinates: _currentCoordinates!,
+        calculationParameters: params,
+      );
+      _scheduleDailyPrayers(prayerTimes);
+    }
+  }
+
+  /// جدولة إشعارات الصلوات الخمس والتذكيرات المسبقة لليوم
   void _scheduleDailyPrayers(PrayerTimes prayerTimes) async {
     try {
-      final notificationService = DependencyInjection.getIt<NotificationService>();
-      
+      final notificationService =
+          DependencyInjection.getIt<NotificationService>();
+
       // إلغاء الجدولة القديمة لمنع التكرار
       await notificationService.cancelAllNotifications();
 
       final now = DateTime.now();
 
+      // قراءة إعدادات التذكير قبل الصلاة من settings_box
+      final settingsBox = Hive.isBoxOpen('settings_box')
+          ? Hive.box('settings_box')
+          : await Hive.openBox('settings_box');
+
+      final bool isPreReminderEnabled = settingsBox.get(
+        'pre_prayer_reminder_enabled',
+        defaultValue: true,
+      );
+      final int reminderMinutes = settingsBox.get(
+        'pre_prayer_reminder_minutes',
+        defaultValue: 10,
+      );
+      final String reminderSound = settingsBox.get(
+        'pre_prayer_reminder_sound',
+        defaultValue: 'assets/audio/tazkir/t (1).mp3',
+      );
+      final String rawReminderSound =
+          NotificationService.getRawSoundName(reminderSound);
+
       // قائمة الصلوات الخمس بأسمائها ومواقيتها
       final prayers = [
-        {'id': 1, 'name': 'الفجر',  'time': prayerTimes.fajr},
-        {'id': 2, 'name': 'الظهر',  'time': prayerTimes.dhuhr},
-        {'id': 3, 'name': 'العصر',  'time': prayerTimes.asr},
+        {'id': 1, 'name': 'الفجر', 'time': prayerTimes.fajr},
+        {'id': 2, 'name': 'الظهر', 'time': prayerTimes.dhuhr},
+        {'id': 3, 'name': 'العصر', 'time': prayerTimes.asr},
         {'id': 4, 'name': 'المغرب', 'time': prayerTimes.maghrib},
         {'id': 5, 'name': 'العشاء', 'time': prayerTimes.isha},
       ];
 
-      // ✅ استخدام for loop بدلاً من forEach لضمان عمل await بشكل صحيح
       for (final info in prayers) {
-        final int id       = info['id'] as int;
-        final String name  = info['name'] as String;
-        DateTime time      = info['time'] as DateTime;
+        final int id = info['id'] as int;
+        final String name = info['name'] as String;
+        DateTime time = info['time'] as DateTime;
 
         // إذا مضى وقت الصلاة اليوم، نجدول نفس الصلاة لليوم التالي
         if (time.isBefore(now)) {
@@ -288,31 +321,58 @@ class PrayerCubit extends Cubit<PrayerStates> {
               calculationParameters: params,
             );
             switch (id) {
-              case 1: time = tomorrowPrayerTimes.fajr;    break;
-              case 2: time = tomorrowPrayerTimes.dhuhr;   break;
-              case 3: time = tomorrowPrayerTimes.asr;     break;
-              case 4: time = tomorrowPrayerTimes.maghrib; break;
-              case 5: time = tomorrowPrayerTimes.isha;    break;
+              case 1:
+                time = tomorrowPrayerTimes.fajr;
+                break;
+              case 2:
+                time = tomorrowPrayerTimes.dhuhr;
+                break;
+              case 3:
+                time = tomorrowPrayerTimes.asr;
+                break;
+              case 4:
+                time = tomorrowPrayerTimes.maghrib;
+                break;
+              case 5:
+                time = tomorrowPrayerTimes.isha;
+                break;
             }
           } else {
-            continue; // تخطي إذا لم تتوفر الإحداثيات
+            continue;
           }
         }
 
-        // صوت الفجر مختلف: أذان الفجر مع "الصلاة خير من النوم"
+        // 1. صوت الفجر مختلف: أذان الفجر مع "الصلاة خير من النوم"
         final String soundFile = (name == 'الفجر') ? 'adhan_fajr' : 'adhan';
 
         await notificationService.scheduleNotification(
           id: id,
           title: 'حان الآن موعد صلاة $name',
-          body: 'الله أكبر، الله أكبر... حان الآن وقت صلاة $name حسب توقيتك المحلي.',
+          body:
+              'الله أكبر، الله أكبر... حان الآن وقت صلاة $name حسب توقيتك المحلي.',
           scheduledTime: time,
-          payload: 'adhan_alarm|$name|${DateFormat.jm().format(time.toLocal())}',
+          payload:
+              'adhan_alarm|$name|${DateFormat.jm().format(time.toLocal())}',
           soundFileName: soundFile,
         );
+
+        // 2. جدولة التذكير قبل موعد الصلاة مع إمكانية الإغلاق والتمديد
+        if (isPreReminderEnabled) {
+          final DateTime reminderTime =
+              time.subtract(Duration(minutes: reminderMinutes));
+          if (reminderTime.isAfter(now)) {
+            await notificationService.schedulePrePrayerReminder(
+              id: id + 200, // معرّفات مستقلة 201..205
+              prayerName: name,
+              reminderTime: reminderTime,
+              minutesBefore: reminderMinutes,
+              soundFileName: rawReminderSound,
+            );
+          }
+        }
       }
     } catch (e) {
-      log("حدث خطأ أثناء جدولة إشعارات الصلاة: $e");
+      log("حدث خطأ أثناء جدولة إشعارات الصلاة والتذكير: $e");
     }
   }
 

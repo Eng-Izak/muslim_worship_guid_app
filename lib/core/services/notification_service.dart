@@ -8,8 +8,10 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 
 class NotificationService {
@@ -22,6 +24,15 @@ class NotificationService {
 
   /// تتبع التوقيتات المستقلة المجدولة لنظام الويندوز
   final Map<int, Timer> _windowsTimers = {};
+
+  /// استخراج اسم الملف الصوتي بنسق أندرويد الخام من مسار أصل التذكير
+  static String getRawSoundName(String path) {
+    final match = RegExp(r't\s*\((\d+)\)').firstMatch(path);
+    if (match != null) {
+      return 'tazkir_${match.group(1)}';
+    }
+    return 'tazkir_1';
+  }
 
   /// التحقق من دعم المنصة لإشعارات النظام المحلية (تشمل الأندرويد والآيفون والويندوز والماك ولينكس)
   static bool get isSupported =>
@@ -37,7 +48,8 @@ class NotificationService {
     tz.initializeTimeZones();
 
     try {
-      final String timeZoneName = (await FlutterTimezone.getLocalTimezone()).identifier;
+      final String timeZoneName =
+          (await FlutterTimezone.getLocalTimezone()).identifier;
       tz.setLocalLocation(tz.getLocation(timeZoneName));
       log("Timezone initialized successfully: $timeZoneName");
     } catch (e) {
@@ -56,28 +68,50 @@ class NotificationService {
 
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-          requestAlertPermission: false,
-          requestBadgePermission: false,
-          requestSoundPermission: false,
-        );
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
 
     const LinuxInitializationSettings initializationSettingsLinux =
         LinuxInitializationSettings(defaultActionName: 'Open notification');
 
     final InitializationSettings initializationSettings =
         InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsDarwin,
-          macOS: initializationSettingsDarwin,
-          linux: initializationSettingsLinux,
-        );
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsDarwin,
+      macOS: initializationSettingsDarwin,
+      linux: initializationSettingsLinux,
+    );
 
     try {
       final bool? initialized = await _notificationsPlugin.initialize(
         settings: initializationSettings,
-        onDidReceiveNotificationResponse: (NotificationResponse response) async {
-          log("تم النقر على الإشعار: ${response.payload}");
+        onDidReceiveNotificationResponse:
+            (NotificationResponse response) async {
+          log("تم النقر على الإشعار: ${response.payload}, actionId: ${response.actionId}");
+          final actionId = response.actionId;
           final payload = response.payload;
+
+          // معالجة أزرار إشعار التذكير قبل الصلاة (إغلاق أو تمديد)
+          if (actionId == 'dismiss_reminder') {
+            if (response.id != null) {
+              await cancelNotification(response.id!);
+            }
+            log("🛑 تم إغلاق إشعار التذكير بواسطة المستخدم.");
+            return;
+          }
+
+          if (actionId == 'snooze_reminder') {
+            if (response.id != null) {
+              await cancelNotification(response.id!);
+            }
+            await handleSnoozeReminder(response);
+            log("⏳ تم تمديد وقت التذكير 5 دقائق إضافية.");
+            return;
+          }
+
+          // معالجة النقر على إشعار الأذان الأساسي
           if (payload != null && payload.startsWith('adhan_alarm')) {
             final parts = payload.split('|');
             if (parts.length >= 3) {
@@ -85,7 +119,8 @@ class NotificationService {
               final String time = parts[2];
 
               final prefs = await SharedPreferences.getInstance();
-              final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
+              final String cityName =
+                  prefs.getString('city_name') ?? "موقعي الحالي";
 
               PrayerAdhanManager.triggerAdhanScreen(
                 prayerName: name,
@@ -112,7 +147,8 @@ class NotificationService {
               final String time = parts[2];
 
               final prefs = await SharedPreferences.getInstance();
-              final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
+              final String cityName =
+                  prefs.getString('city_name') ?? "موقعي الحالي";
 
               PrayerAdhanManager.triggerAdhanScreen(
                 prayerName: name,
@@ -130,6 +166,47 @@ class NotificationService {
     }
   }
 
+  /// معالجة خيار "تمديد" (Snooze) للتذكير 5 دقائق إضافية
+  Future<void> handleSnoozeReminder(NotificationResponse response) async {
+    try {
+      final payload = response.payload;
+      String prayerName = 'الصلاة';
+      if (payload != null && payload.startsWith('pre_prayer_reminder')) {
+        final parts = payload.split('|');
+        if (parts.length >= 2) {
+          prayerName = parts[1];
+        }
+      }
+
+      final snoozeTime = DateTime.now().add(const Duration(minutes: 5));
+
+      final prefs = await SharedPreferences.getInstance();
+      final soundPath = prefs.getString('pre_prayer_reminder_sound') ??
+          'assets/audio/tazkir/t (1).mp3';
+      final soundFileName = getRawSoundName(soundPath);
+
+      final int snoozeId = (response.id ?? 200) + 100;
+
+      await schedulePrePrayerReminder(
+        id: snoozeId,
+        prayerName: prayerName,
+        reminderTime: snoozeTime,
+        minutesBefore: 5,
+        soundFileName: soundFileName,
+        isSnooze: true,
+      );
+
+      // إشعار تأكيد فوري يوضح للمستخدم أنه تم التمديد بنجاح
+      await showInstantNotification(
+        id: 9991,
+        title: 'تم تمديد التذكير ⏳',
+        body: 'سنذكرك بصلاة $prayerName مرة أخرى بعد 5 دقائق إن شاء الله.',
+      );
+    } catch (e) {
+      log("Error handling snooze reminder: $e");
+    }
+  }
+
   /// طلب صلاحيات الإشعارات (متوافق مع Android 13+ و iOS و Windows)
   Future<bool> requestPermissions() async {
     if (!isSupported) return false;
@@ -140,11 +217,10 @@ class NotificationService {
     try {
       final androidImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
+              AndroidFlutterLocalNotificationsPlugin>();
       if (androidImplementation != null) {
-        androidGranted = await androidImplementation
-            .requestNotificationsPermission();
+        androidGranted =
+            await androidImplementation.requestNotificationsPermission();
 
         try {
           await androidImplementation.requestExactAlarmsPermission();
@@ -162,8 +238,7 @@ class NotificationService {
     try {
       final iosImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >();
+              IOSFlutterLocalNotificationsPlugin>();
 
       if (iosImplementation != null) {
         iosGranted = await iosImplementation.requestPermissions(
@@ -179,6 +254,43 @@ class NotificationService {
     return (androidGranted ?? false) || (iosGranted ?? false);
   }
 
+  /// تشغيل صوت التذكير بنظام الويندوز أو بالخلفية
+  Future<void> _playTazkirSound(String? soundFileName) async {
+    try {
+      final player = DependencyInjection.getIt<AudioPlayer>();
+      await player.stop();
+
+      final num = soundFileName?.replaceAll('tazkir_', '') ?? '1';
+      final path = 'assets/audio/tazkir/t ($num).mp3';
+
+      final byteData = await rootBundle.load(path);
+      final sanitizedFileName = 'tazkir_$num.mp3';
+      final tempFile = File('${Directory.systemTemp.path}/$sanitizedFileName');
+      if (!await tempFile.exists() ||
+          (await tempFile.length()) != byteData.lengthInBytes) {
+        await tempFile.writeAsBytes(
+          byteData.buffer.asUint8List(),
+          flush: true,
+        );
+      }
+
+      final audioSource = AudioSource.file(
+        tempFile.path,
+        tag: MediaItem(
+          id: 'tazkir_audio_${DateTime.now().millisecondsSinceEpoch}',
+          title: 'تذكير باقتراب الصلاة',
+          album: 'التذكير',
+        ),
+      );
+
+      await player.setAudioSource(audioSource);
+      await player.setVolume(1.0);
+      await player.play();
+    } catch (e) {
+      log("Error playing reminder sound: $e");
+    }
+  }
+
   /// إظهار إشعار فوري
   Future<void> showInstantNotification({
     required int id,
@@ -190,13 +302,13 @@ class NotificationService {
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-          'immediate_channel',
-          'الإشعارات الفورية',
-          channelDescription: 'تنبيهات فورية تظهر للمستخدم فوراً',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-        );
+      'immediate_channel',
+      'الإشعارات الفورية',
+      channelDescription: 'تنبيهات فورية تظهر للمستخدم فوراً',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+    );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -222,7 +334,198 @@ class NotificationService {
     }
   }
 
-  /// جدولة إشعار في وقت محدد مستقبلاً (يدعم نظام الويندوز والأندرويد والآيفون بالكامل)
+  /// إظهار إشعار فوري للتذكير قبل الصلاة (يستخدم لتجربة التذكير الفورية من الإعدادات)
+  Future<void> showInstantPrePrayerReminder({
+    required String prayerName,
+    required int minutesBefore,
+    String? soundFileName,
+  }) async {
+    if (!isSupported) return;
+
+    final List<AndroidNotificationAction> actions = [
+      const AndroidNotificationAction(
+        'dismiss_reminder',
+        'إغلاق',
+        cancelNotification: true,
+        showsUserInterface: false,
+      ),
+      const AndroidNotificationAction(
+        'snooze_reminder',
+        'تمديد (5 دقائق)',
+        cancelNotification: true,
+        showsUserInterface: false,
+      ),
+    ];
+
+    final AndroidNotificationDetails androidDetails;
+    if (soundFileName != null) {
+      androidDetails = AndroidNotificationDetails(
+        'pre_prayer_reminder_$soundFileName',
+        'تذكير ما قبل الصلاة',
+        channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound(soundFileName),
+        actions: actions,
+      );
+    } else {
+      androidDetails = AndroidNotificationDetails(
+        'pre_prayer_reminder_default',
+        'تذكير ما قبل الصلاة',
+        channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        actions: actions,
+      );
+    }
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    final NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    if (!kIsWeb && Platform.isWindows) {
+      await _playTazkirSound(soundFileName);
+    }
+
+    try {
+      await _notificationsPlugin.show(
+        id: 7777,
+        title: '🔔 تنبيه: اقتراب صلاة $prayerName',
+        body:
+            'متبقي $minutesBefore دقائق على أذان صلاة $prayerName. استعد للصلاة والوضوء.',
+        notificationDetails: platformDetails,
+        payload: 'pre_prayer_reminder|$prayerName|$minutesBefore',
+      );
+    } catch (e) {
+      log("Error showing instant pre-prayer reminder: $e");
+    }
+  }
+
+  /// جدولة إشعار التذكير قبل الصلاة في وقت محدد مسبقاً
+  Future<void> schedulePrePrayerReminder({
+    required int id,
+    required String prayerName,
+    required DateTime reminderTime,
+    required int minutesBefore,
+    String? soundFileName,
+    bool isSnooze = false,
+  }) async {
+    if (!isSupported) return;
+
+    final Duration timeUntilScheduled = reminderTime.difference(DateTime.now());
+
+    final String title = isSnooze
+        ? '⏳ تنبيه ممتد: اقتراب صلاة $prayerName'
+        : '🔔 اقتراب موعد صلاة $prayerName';
+    final String body = isSnooze
+        ? 'انتهت 5 دقائق من التمديد. حان وقت الاستعداد لصلاة $prayerName.'
+        : 'متبقي $minutesBefore دقائق على أذان صلاة $prayerName. استعد للوضوء والتهيؤ للصلاة.';
+    final String payload = 'pre_prayer_reminder|$prayerName|$minutesBefore';
+
+    // جدولة خاصة بنظام الويندوز
+    if (!kIsWeb && Platform.isWindows) {
+      _windowsTimers[id]?.cancel();
+      if (!timeUntilScheduled.isNegative) {
+        _windowsTimers[id] = Timer(timeUntilScheduled, () async {
+          await _playTazkirSound(soundFileName);
+          await showInstantNotification(
+            id: id,
+            title: title,
+            body: body,
+            payload: payload,
+          );
+        });
+        log("Windows reminder timer scheduled for $prayerName in ${timeUntilScheduled.inMinutes} minutes.");
+      }
+      return;
+    }
+
+    final List<AndroidNotificationAction> actions = [
+      const AndroidNotificationAction(
+        'dismiss_reminder',
+        'إغلاق',
+        cancelNotification: true,
+        showsUserInterface: false,
+      ),
+      const AndroidNotificationAction(
+        'snooze_reminder',
+        'تمديد (5 دقائق)',
+        cancelNotification: true,
+        showsUserInterface: false,
+      ),
+    ];
+
+    final AndroidNotificationDetails androidDetails;
+    if (soundFileName != null) {
+      androidDetails = AndroidNotificationDetails(
+        'pre_prayer_reminder_$soundFileName',
+        'تذكير ما قبل الصلاة',
+        channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound(soundFileName),
+        actions: actions,
+      );
+    } else {
+      androidDetails = AndroidNotificationDetails(
+        'pre_prayer_reminder_default',
+        'تذكير ما قبل الصلاة',
+        channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        actions: actions,
+      );
+    }
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    final NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    final tz.TZDateTime tzScheduledTime = tz.TZDateTime.from(
+      reminderTime,
+      tz.local,
+    );
+
+    if (tzScheduledTime.isBefore(tz.TZDateTime.now(tz.local))) {
+      log("تذكير قبل صلاة $prayerName لم يجدول لأن وقته قد مضى بالفعل.");
+      return;
+    }
+
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzScheduledTime,
+        notificationDetails: platformDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: payload,
+      );
+      log("✅ تم جدولة تذكير قبل صلاة $prayerName بنجاح في وقت $reminderTime (قبل $minutesBefore دقيقة)");
+    } catch (e) {
+      log("Error scheduling pre-prayer reminder: $e");
+    }
+  }
+
+  /// جدولة إشعار في وقت محدد مستقبلاً (للأذان والصلوات)
   Future<void> scheduleNotification({
     required int id,
     required String title,
@@ -266,7 +569,8 @@ class NotificationService {
               final String name = parts[1];
               final String time = parts[2];
               final prefs = await SharedPreferences.getInstance();
-              final String cityName = prefs.getString('city_name') ?? "موقعي الحالي";
+              final String cityName =
+                  prefs.getString('city_name') ?? "موقعي الحالي";
 
               PrayerAdhanManager.triggerAdhanScreen(
                 prayerName: name,
