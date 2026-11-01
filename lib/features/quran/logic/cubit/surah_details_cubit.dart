@@ -406,7 +406,6 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
   /// حذف التلاوة المنزلة محلياً
   Future<void> deleteDownloadedAudio(int surahNumber, String reciterId) async {
     if (state is! SurahDetailsLoaded) return;
-    final currentState = state as SurahDetailsLoaded;
 
     await QuranAudioDownloadService.deleteAudio(surahNumber, reciterId);
 

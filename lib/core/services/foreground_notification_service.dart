@@ -570,14 +570,6 @@ class NotificationTaskHandler extends TaskHandler {
     FlutterForegroundTask.launchApp();
   }
 
-  Future<void> _updateNotification() async {
-    await ForegroundNotificationService.updateNotificationData(
-      _latitude,
-      _longitude,
-      _cityName,
-    );
-  }
-
   Future<void> _handleBackgroundLocationUpdate() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
