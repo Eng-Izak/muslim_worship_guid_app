@@ -49,35 +49,38 @@ class UserSettingsScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: ListView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            children: const [
-              // قسم اختيار نمط العرض (فاتح / داكن / تلقائي)
-              ThemeSelectorCard(),
+          body: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: const [
+                // قسم اختيار نمط العرض (فاتح / داكن / تلقائي)
+                ThemeSelectorCard(),
 
-              SizedBox(height: 12),
+                SizedBox(height: 12),
 
-              // قسم إشعار مواقيت الصلاة المستمر وتثبيته في الخلفية
-              PersistentNotificationCard(),
+                // قسم إشعار مواقيت الصلاة المستمر وتثبيته في الخلفية
+                PersistentNotificationCard(),
 
-              SizedBox(height: 12),
+                SizedBox(height: 12),
 
-              // قسم التذكير قبل موعد الصلاة (إغلاق وتمديد ونغمات التذكير)
-              PrePrayerReminderCard(),
+                // قسم التذكير قبل موعد الصلاة (إغلاق وتمديد ونغمات التذكير)
+                PrePrayerReminderCard(),
 
-              SizedBox(height: 12),
+                SizedBox(height: 12),
 
-              // قسم اختيار صوت الأذان وتخصيصه للصلوات والفجر
-              AdhanVoiceSelectorCard(),
+                // قسم اختيار صوت الأذان وتخصيصه للصلوات والفجر
+                AdhanVoiceSelectorCard(),
 
-              SizedBox(height: 12),
+                SizedBox(height: 12),
 
-              // قسم اختيار لغة التطبيق وتخصيص الخطوط وحجمها بالكامل
-              TypographySelectorCard(),
+                // قسم اختيار لغة التطبيق وتخصيص الخطوط وحجمها بالكامل
+                TypographySelectorCard(),
 
-              SizedBox(height: 30),
-            ],
+                SizedBox(height: 24),
+              ],
+            ),
           ),
           // الهامش الاحترافي للمطور بالأسفل لضمان تناسق شكل الشاشات ككل
           bottomNavigationBar: const AppDeveloperFooterWidget(),

@@ -7,6 +7,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/asset_json_decompressor.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/quran_audio_download_service.dart';
 import 'package:prayer_times_quran_azkar_app/features/quran/data/models/ayah_model.dart';
 import 'package:prayer_times_quran_azkar_app/features/quran/data/models/reciter_audio_model.dart';
 
@@ -162,12 +163,32 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
         }
       }
 
+      Set<String> downloadedSet = {};
+      try {
+        final dir = await QuranAudioDownloadService.getAudioDirectory();
+        if (await dir.exists()) {
+          final prefix = 'surah_${surahNumber}_reciter_';
+          final files = dir.listSync();
+          for (final f in files) {
+            final fileName = f.path.split(Platform.pathSeparator).last;
+            if (fileName.startsWith(prefix) && fileName.endsWith('.mp3')) {
+              final rId =
+                  fileName.replaceAll(prefix, '').replaceAll('.mp3', '');
+              if (f is File && f.lengthSync() > 10240) {
+                downloadedSet.add(rId);
+              }
+            }
+          }
+        }
+      } catch (_) {}
+
       emit(
         SurahDetailsLoaded(
           ayahs: ayahsList,
           playingReciterId: playingReciterId,
           isPlaying: isPlaying,
           isAudioLoading: isAudioLoading,
+          downloadedReciterIds: downloadedSet,
         ),
       );
     } catch (e) {
@@ -221,23 +242,39 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
           final String fileName = (lastSlash != -1) ? audioUrl.substring(lastSlash + 1) : '';
           final bool isThreeDigits = fileName.length >= 7 || fileName.startsWith('0');
 
+          final Directory audioDir = await QuranAudioDownloadService.getAudioDirectory();
+
           for (int s = 1; s <= 114; s++) {
             final String surahNumStr = isThreeDigits ? s.toString().padLeft(3, '0') : s.toString();
             final String surahAudioUrl = baseUrl.isNotEmpty ? '$baseUrl$surahNumStr.mp3' : audioUrl;
             final String sName = (s <= kSurahArabicNames.length) ? kSurahArabicNames[s - 1] : 'سورة $s';
 
-            playlistSources.add(
-              AudioSource.uri(
-                Uri.parse(surahAudioUrl),
-                tag: MediaItem(
-                  id: 'surah_${s}_$reciterId',
-                  album: 'القرآن الكريم',
-                  title: sName.startsWith('سُورَةُ') ? sName : 'سُورَةُ $sName',
-                  artist: reciterNameAr,
-                  artUri: Uri.parse('asset:///assets/images/logo.png'),
-                ),
-              ),
-            );
+            final localFile = File('${audioDir.path}/surah_${s}_reciter_$reciterId.mp3');
+            final bool existsLocally = localFile.existsSync() && localFile.lengthSync() > 10240;
+
+            final AudioSource source = existsLocally
+                ? AudioSource.file(
+                    localFile.path,
+                    tag: MediaItem(
+                      id: 'surah_${s}_$reciterId',
+                      album: 'القرآن الكريم',
+                      title: sName.startsWith('سُورَةُ') ? sName : 'سُورَةُ $sName',
+                      artist: reciterNameAr,
+                      artUri: Uri.parse('asset:///assets/images/logo.png'),
+                    ),
+                  )
+                : AudioSource.uri(
+                    Uri.parse(surahAudioUrl),
+                    tag: MediaItem(
+                      id: 'surah_${s}_$reciterId',
+                      album: 'القرآن الكريم',
+                      title: sName.startsWith('سُورَةُ') ? sName : 'سُورَةُ $sName',
+                      artist: reciterNameAr,
+                      artUri: Uri.parse('asset:///assets/images/logo.png'),
+                    ),
+                  );
+
+            playlistSources.add(source);
           }
 
           final int initialIndex = ((_surahNumber ?? 1) - 1).clamp(0, 113);
@@ -312,6 +349,72 @@ class SurahDetailsCubit extends Cubit<SurahDetailsState> {
     }
 
     return rawAyahs.map((item) => AyahModel.fromJson(item)).toList();
+  }
+
+  /// تنزيل تلاوة السورة لقارئ معين
+  Future<void> downloadReciterAudio(int surahNumber, ReciterAudioModel reciter) async {
+    if (state is! SurahDetailsLoaded) return;
+    final currentState = state as SurahDetailsLoaded;
+    final reciterId = reciter.reciterId.toString();
+
+    // إذا كان جارياً تنزيله بالفعل، لا نفعل شيئاً
+    if (currentState.downloadingProgress.containsKey(reciterId)) return;
+
+    final updatedProgress = Map<String, double>.from(currentState.downloadingProgress);
+    updatedProgress[reciterId] = 0.0;
+    emit(currentState.copyWith(downloadingProgress: updatedProgress));
+
+    try {
+      final file = await QuranAudioDownloadService.downloadAudio(
+        surahNumber: surahNumber,
+        reciterId: reciterId,
+        url: reciter.surahAudioUrl,
+        onProgress: (progress) {
+          if (isClosed || state is! SurahDetailsLoaded) return;
+          final current = state as SurahDetailsLoaded;
+          final newMap = Map<String, double>.from(current.downloadingProgress);
+          newMap[reciterId] = progress;
+          emit(current.copyWith(downloadingProgress: newMap));
+        },
+      );
+
+      if (isClosed || state is! SurahDetailsLoaded) return;
+      final current = state as SurahDetailsLoaded;
+      final newProgressMap = Map<String, double>.from(current.downloadingProgress);
+      newProgressMap.remove(reciterId);
+
+      if (file != null && file.existsSync()) {
+        final newDownloadedSet = Set<String>.from(current.downloadedReciterIds);
+        newDownloadedSet.add(reciterId);
+        emit(current.copyWith(
+          downloadedReciterIds: newDownloadedSet,
+          downloadingProgress: newProgressMap,
+        ));
+      } else {
+        emit(current.copyWith(downloadingProgress: newProgressMap));
+      }
+    } catch (e) {
+      debugPrint("❌ Error downloading reciter audio: $e");
+      if (isClosed || state is! SurahDetailsLoaded) return;
+      final current = state as SurahDetailsLoaded;
+      final newProgressMap = Map<String, double>.from(current.downloadingProgress);
+      newProgressMap.remove(reciterId);
+      emit(current.copyWith(downloadingProgress: newProgressMap));
+    }
+  }
+
+  /// حذف التلاوة المنزلة محلياً
+  Future<void> deleteDownloadedAudio(int surahNumber, String reciterId) async {
+    if (state is! SurahDetailsLoaded) return;
+    final currentState = state as SurahDetailsLoaded;
+
+    await QuranAudioDownloadService.deleteAudio(surahNumber, reciterId);
+
+    if (isClosed || state is! SurahDetailsLoaded) return;
+    final current = state as SurahDetailsLoaded;
+    final newDownloadedSet = Set<String>.from(current.downloadedReciterIds);
+    newDownloadedSet.remove(reciterId);
+    emit(current.copyWith(downloadedReciterIds: newDownloadedSet));
   }
 
   @override

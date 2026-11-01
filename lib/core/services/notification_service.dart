@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_10y.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -13,6 +14,118 @@ import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
+
+/// معالج التفاعل مع أزرار الإشعارات بالخلفية (يجب أن يكون Top-Level مع Entry-Point)
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  log("🔔 [notificationTapBackground] actionId: ${response.actionId}, payload: ${response.payload}");
+
+  final String? actionId = response.actionId;
+  final int id = response.id ?? 7777;
+  final String? payload = response.payload;
+
+  final plugin = FlutterLocalNotificationsPlugin();
+
+  // 1. عند الضغط على زر "إغلاق"
+  if (actionId == 'dismiss_reminder') {
+    try {
+      await plugin.cancel(id: id);
+      await plugin.cancel(id: 7777);
+    } catch (_) {}
+    log("🛑 [Background Action] تم إغلاق التذكير بنجاح.");
+    return;
+  }
+
+  // 2. عند الضغط على زر "تمديد (5 دقائق)"
+  if (actionId == 'snooze_reminder') {
+    try {
+      await plugin.cancel(id: id);
+      await plugin.cancel(id: 7777);
+    } catch (_) {}
+
+    String prayerName = 'الصلاة';
+    if (payload != null && payload.startsWith('pre_prayer_reminder')) {
+      final parts = payload.split('|');
+      if (parts.length >= 2) {
+        prayerName = parts[1];
+      }
+    }
+
+    try {
+      tz.initializeTimeZones();
+    } catch (_) {}
+
+    final snoozeTime =
+        tz.TZDateTime.now(tz.local).add(const Duration(minutes: 5));
+
+    final List<AndroidNotificationAction> actions = [
+      const AndroidNotificationAction(
+        'dismiss_reminder',
+        'إغلاق',
+        cancelNotification: true,
+        showsUserInterface: true,
+      ),
+      const AndroidNotificationAction(
+        'snooze_reminder',
+        'تمديد (5 دقائق)',
+        cancelNotification: true,
+        showsUserInterface: true,
+      ),
+    ];
+
+    final androidDetails = AndroidNotificationDetails(
+      'pre_prayer_reminder_v3_default',
+      'تذكير ما قبل الصلاة',
+      channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      actions: actions,
+    );
+
+    final platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    try {
+      await plugin.zonedSchedule(
+        id: id + 100,
+        title: '⏳ تنبيه ممتد: اقتراب صلاة $prayerName',
+        body: 'انتهت 5 دقائق من التمديد. حان وقت الاستعداد لصلاة $prayerName.',
+        scheduledDate: snoozeTime,
+        notificationDetails: platformDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: 'pre_prayer_reminder|$prayerName|5',
+      );
+    } catch (e) {
+      log("Error scheduling snooze from background: $e");
+    }
+
+    // إشعار تأكيد فوري يوضح للمستخدم التمديد بنجاح
+    try {
+      const confirmDetails = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'immediate_channel',
+          'الإشعارات الفورية',
+          channelDescription: 'تنبيهات فورية تظهر للمستخدم فوراً',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: false,
+        ),
+      );
+      await plugin.show(
+        id: 9991,
+        title: 'تم تمديد التذكير ⏳',
+        body: 'سنذكرك بصلاة $prayerName مرة أخرى بعد 5 دقائق إن شاء الله.',
+        notificationDetails: confirmDetails,
+      );
+    } catch (_) {}
+
+    log("⏳ [Background Action] تم تمديد وقت التذكير 5 دقائق إضافية بنجاح.");
+    return;
+  }
+}
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
@@ -42,6 +155,69 @@ class NotificationService {
           Platform.isMacOS ||
           Platform.isLinux ||
           Platform.isWindows);
+
+  /// معالجة استجابات ونقرات الإشعارات
+  Future<void> _handleNotificationResponse(NotificationResponse response) async {
+    log("تم النقر على الإشعار: ${response.payload}, actionId: ${response.actionId}");
+    final actionId = response.actionId;
+    final payload = response.payload;
+    final id = response.id ?? 7777;
+
+    // معالجة أزرار إشعار التذكير قبل الصلاة (إغلاق أو تمديد)
+    if (actionId == 'dismiss_reminder') {
+      try {
+        final player = DependencyInjection.getIt<AudioPlayer>();
+        await player.stop();
+      } catch (_) {}
+      await cancelNotification(id);
+      if (id != 7777) await cancelNotification(7777);
+      log("🛑 تم إغلاق إشعار التذكير وإيقاف الصوت بنجاح.");
+      return;
+    }
+
+    if (actionId == 'snooze_reminder') {
+      try {
+        final player = DependencyInjection.getIt<AudioPlayer>();
+        await player.stop();
+      } catch (_) {}
+      await cancelNotification(id);
+      if (id != 7777) await cancelNotification(7777);
+      await handleSnoozeReminder(response);
+      log("⏳ تم تمديد وقت التذكير 5 دقائق إضافية.");
+      return;
+    }
+
+    // إذا نقر المستخدم على جسم إشعار التذكير مباشرة
+    if (payload != null && payload.startsWith('pre_prayer_reminder')) {
+      try {
+        final player = DependencyInjection.getIt<AudioPlayer>();
+        await player.stop();
+      } catch (_) {}
+      await cancelNotification(id);
+      if (id != 7777) await cancelNotification(7777);
+      return;
+    }
+
+    // معالجة النقر على إشعار الأذان الأساسي
+    if (payload != null && payload.startsWith('adhan_alarm')) {
+      final parts = payload.split('|');
+      if (parts.length >= 3) {
+        final String name = parts[1];
+        final String time = parts[2];
+
+        final prefs = await SharedPreferences.getInstance();
+        final String cityName =
+            prefs.getString('city_name') ?? "موقعي الحالي";
+
+        PrayerAdhanManager.triggerAdhanScreen(
+          prayerName: name,
+          prayerTime: time,
+          cityName: cityName,
+          isStandalone: true,
+        );
+      }
+    }
+  }
 
   /// تهيئة خدمة الإشعارات والمناطق الزمنية
   Future<void> init() async {
@@ -87,50 +263,10 @@ class NotificationService {
     try {
       final bool? initialized = await _notificationsPlugin.initialize(
         settings: initializationSettings,
-        onDidReceiveNotificationResponse:
-            (NotificationResponse response) async {
-          log("تم النقر على الإشعار: ${response.payload}, actionId: ${response.actionId}");
-          final actionId = response.actionId;
-          final payload = response.payload;
-
-          // معالجة أزرار إشعار التذكير قبل الصلاة (إغلاق أو تمديد)
-          if (actionId == 'dismiss_reminder') {
-            if (response.id != null) {
-              await cancelNotification(response.id!);
-            }
-            log("🛑 تم إغلاق إشعار التذكير بواسطة المستخدم.");
-            return;
-          }
-
-          if (actionId == 'snooze_reminder') {
-            if (response.id != null) {
-              await cancelNotification(response.id!);
-            }
-            await handleSnoozeReminder(response);
-            log("⏳ تم تمديد وقت التذكير 5 دقائق إضافية.");
-            return;
-          }
-
-          // معالجة النقر على إشعار الأذان الأساسي
-          if (payload != null && payload.startsWith('adhan_alarm')) {
-            final parts = payload.split('|');
-            if (parts.length >= 3) {
-              final String name = parts[1];
-              final String time = parts[2];
-
-              final prefs = await SharedPreferences.getInstance();
-              final String cityName =
-                  prefs.getString('city_name') ?? "موقعي الحالي";
-
-              PrayerAdhanManager.triggerAdhanScreen(
-                prayerName: name,
-                prayerTime: time,
-                cityName: cityName,
-                isStandalone: true,
-              );
-            }
-          }
+        onDidReceiveNotificationResponse: (NotificationResponse response) async {
+          await _handleNotificationResponse(response);
         },
+        onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
       );
 
       _isInitialized = initialized ?? true;
@@ -138,26 +274,9 @@ class NotificationService {
       final NotificationAppLaunchDetails? launchDetails =
           await _notificationsPlugin.getNotificationAppLaunchDetails();
       if (launchDetails?.didNotificationLaunchApp ?? false) {
-        final payload = launchDetails?.notificationResponse?.payload;
-        if (payload != null && payload.startsWith('adhan_alarm')) {
-          Future.delayed(const Duration(milliseconds: 1000), () async {
-            final parts = payload.split('|');
-            if (parts.length >= 3) {
-              final String name = parts[1];
-              final String time = parts[2];
-
-              final prefs = await SharedPreferences.getInstance();
-              final String cityName =
-                  prefs.getString('city_name') ?? "موقعي الحالي";
-
-              PrayerAdhanManager.triggerAdhanScreen(
-                prayerName: name,
-                prayerTime: time,
-                cityName: cityName,
-                isStandalone: true,
-              );
-            }
-          });
+        final resp = launchDetails?.notificationResponse;
+        if (resp != null) {
+          await _handleNotificationResponse(resp);
         }
       }
     } catch (e) {
@@ -347,20 +466,20 @@ class NotificationService {
         'dismiss_reminder',
         'إغلاق',
         cancelNotification: true,
-        showsUserInterface: false,
+        showsUserInterface: true,
       ),
       const AndroidNotificationAction(
         'snooze_reminder',
         'تمديد (5 دقائق)',
         cancelNotification: true,
-        showsUserInterface: false,
+        showsUserInterface: true,
       ),
     ];
 
     final AndroidNotificationDetails androidDetails;
     if (soundFileName != null) {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_$soundFileName',
+        'pre_prayer_reminder_v3_$soundFileName',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
@@ -371,7 +490,7 @@ class NotificationService {
       );
     } else {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_default',
+        'pre_prayer_reminder_v3_default',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
@@ -454,20 +573,20 @@ class NotificationService {
         'dismiss_reminder',
         'إغلاق',
         cancelNotification: true,
-        showsUserInterface: false,
+        showsUserInterface: true,
       ),
       const AndroidNotificationAction(
         'snooze_reminder',
         'تمديد (5 دقائق)',
         cancelNotification: true,
-        showsUserInterface: false,
+        showsUserInterface: true,
       ),
     ];
 
     final AndroidNotificationDetails androidDetails;
     if (soundFileName != null) {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_$soundFileName',
+        'pre_prayer_reminder_v3_$soundFileName',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
@@ -478,7 +597,7 @@ class NotificationService {
       );
     } else {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_default',
+        'pre_prayer_reminder_v3_default',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,

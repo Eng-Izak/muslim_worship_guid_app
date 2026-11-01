@@ -8,7 +8,7 @@ import 'package:prayer_times_quran_azkar_app/features/user_settings/logic/settin
 class TypographySelectorCard extends StatelessWidget {
   const TypographySelectorCard({super.key});
 
-  /// الحصول على الخط بأمان بدون إطلاق استثناءات عند عدم وجود الشبكة أو على نظام الويندوز
+  /// الحصول على الخط بأمان وبشكل مباشر وسريع
   TextStyle _getSafeFont(
     String fontName, {
     TextStyle? textStyle,
@@ -17,6 +17,21 @@ class TypographySelectorCard extends StatelessWidget {
     Color? color,
   }) {
     try {
+      if (fontName == 'Amiri') {
+        return GoogleFonts.amiri(
+          textStyle: textStyle,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        );
+      } else if (fontName == 'Lateef') {
+        return GoogleFonts.lateef(
+          textStyle: textStyle,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        );
+      }
       return GoogleFonts.getFont(
         fontName,
         textStyle: textStyle,
@@ -60,9 +75,7 @@ class TypographySelectorCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-
-              // --- 2. اختيار نوع الخط ---
+              // --- 1. اختيار نوع الخط ---
               _buildSectionHeader(
                 context,
                 Icons.font_download_rounded,
@@ -73,64 +86,91 @@ class TypographySelectorCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 45,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: availableFonts.length,
-                  itemBuilder: (context, index) {
-                    final font = availableFonts[index];
-                    final isSelected = state.fontFamily == font;
-                    return Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 10),
-                      child: ChoiceChip(
-                        label: Text(
-                          font,
-                          style: _getSafeFont(font, fontSize: 13),
-                        ),
-                        selected: isSelected,
-                        selectedColor: ThemingColors.kActiveBackground(context),
-                        backgroundColor:
-                            ThemingColors.kUnselectedBackground(context),
-                        side: BorderSide(
-                          color: isSelected
-                              ? ThemingColors.kActiveBackground(context)
-                              : ThemingColors.kUnselectedBorder(context),
-                        ),
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? ThemingColors.kActiveTextIcon(context)
-                              : ThemingColors.kUnselectedTextIcon(context),
-                        ),
-                        onSelected: (_) =>
-                            settingsCubit.changeFontFamily(font),
+              Row(
+                children: availableFonts.map((font) {
+                  final isSelected = state.fontFamily == font;
+                  return Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 10),
+                    child: ChoiceChip(
+                      label: Text(
+                        font,
+                        style: _getSafeFont(font, fontSize: 13),
                       ),
-                    );
-                  },
-                ),
+                      selected: isSelected,
+                      selectedColor: ThemingColors.kActiveBackground(context),
+                      backgroundColor:
+                          ThemingColors.kUnselectedBackground(context),
+                      side: BorderSide(
+                        color: isSelected
+                            ? ThemingColors.kActiveBackground(context)
+                            : ThemingColors.kUnselectedBorder(context),
+                      ),
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? ThemingColors.kActiveTextIcon(context)
+                            : ThemingColors.kUnselectedTextIcon(context),
+                      ),
+                      onSelected: (_) =>
+                          settingsCubit.changeFontFamily(font),
+                    ),
+                  );
+                }).toList(),
               ),
+
               Divider(
                 color: ThemingColors.kCardBorder(context),
                 height: 24,
               ),
 
-              // --- 3. التحكم بحجم الخط (Slider) ---
+              // --- 2. التحكم بحجم الخط (أزرار تفاعلية ناعمة بدون صراع مع التمرير) ---
               _buildSectionHeader(
                 context,
                 Icons.format_size_rounded,
                 Localization.tr(context, ar: 'حجم الخط', en: 'Font Size'),
               ),
-              Slider(
-                value: state.fontScale,
-                min: 0.8,
-                max: 1.4,
-                divisions: 3,
-                activeColor: ThemingColors.kAccent(context),
-                inactiveColor: ThemingColors.kUnselectedBackground(context),
-                onChanged: (value) => settingsCubit.changeFontScale(value),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildScaleOption(
+                    context,
+                    labelAr: 'صغير',
+                    labelEn: 'Small',
+                    scale: 0.8,
+                    currentScale: state.fontScale,
+                    onTap: () => settingsCubit.changeFontScale(0.8),
+                  ),
+                  _buildScaleOption(
+                    context,
+                    labelAr: 'افتراضي',
+                    labelEn: 'Default',
+                    scale: 1.0,
+                    currentScale: state.fontScale,
+                    onTap: () => settingsCubit.changeFontScale(1.0),
+                  ),
+                  _buildScaleOption(
+                    context,
+                    labelAr: 'متوسط',
+                    labelEn: 'Medium',
+                    scale: 1.2,
+                    currentScale: state.fontScale,
+                    onTap: () => settingsCubit.changeFontScale(1.2),
+                  ),
+                  _buildScaleOption(
+                    context,
+                    labelAr: 'كبير',
+                    labelEn: 'Large',
+                    scale: 1.4,
+                    currentScale: state.fontScale,
+                    onTap: () => settingsCubit.changeFontScale(1.4),
+                  ),
+                ],
               ),
 
-              // --- 4. صندوق المعاينة الحية الفاخر (Live Preview) ---
+              const SizedBox(height: 16),
+
+              // --- 3. صندوق المعاينة الحية الفاخر (Live Preview) ---
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
@@ -176,6 +216,60 @@ class TypographySelectorCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildScaleOption(
+    BuildContext context, {
+    required String labelAr,
+    required String labelEn,
+    required double scale,
+    required double currentScale,
+    required VoidCallback onTap,
+  }) {
+    final bool isSelected = (currentScale - scale).abs() < 0.05;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? ThemingColors.kAccent(context)
+              : ThemingColors.kSpecialContainerBackground(context),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? ThemingColors.kAccent(context)
+                : ThemingColors.kCardBorder(context),
+            width: 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 14,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              Localization.tr(context, ar: labelAr, en: labelEn),
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected
+                    ? Colors.white
+                    : ThemingColors.kTextMain(context),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

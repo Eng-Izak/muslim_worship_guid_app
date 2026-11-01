@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/app_developer_footer_widget.dart';
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/background_image_widget.dart';
@@ -15,8 +16,31 @@ import 'package:prayer_times_quran_azkar_app/features/home/ui/widgets/home_upcom
 import 'package:prayer_times_quran_azkar_app/features/home/logic/cubit/location_cubit.dart';
 import 'package:prayer_times_quran_azkar_app/features/prayer_times/logic/cubit/prayer_times_cubit.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final bool hasRealLocation = prefs.getBool('has_real_location') ?? false;
+        final double? cachedLat = prefs.getDouble('lat');
+        final bool isMecca =
+            cachedLat != null && (cachedLat - 21.4225).abs() < 0.001;
+
+        if ((!hasRealLocation || isMecca) && mounted) {
+          context.read<LocationCubit>().fetchAndSaveCurrentLocation();
+        }
+      } catch (_) {}
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,99 +75,99 @@ class HomeScreen extends StatelessWidget {
           child: Scaffold(
             appBar: const HomeAppBarWidget(),
             backgroundColor: ThemingColors.kScaffoldBackground(context),
-              body: SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1300),
-                    child: context.isLandscape
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // الجانب الأيمن/الأيسر: بطاقة مواقيت الصلاة القادمة والتاريخ والتذييل في عمود قابل للتمرير
-                              Expanded(
-                                flex: 2,
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
+            body: SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1300),
+                  child: context.isLandscape
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // الجانب الأيمن/الأيسر: بطاقة مواقيت الصلاة القادمة والتاريخ والتذييل في عمود قابل للتمرير
+                            Expanded(
+                              flex: 2,
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Column(
+                                  children: [
+                                    const TodayTimesUpcomingPrayerCardWidget(),
+                                    const SizedBox(height: 16),
+                                    const HomeDateWidget(),
+                                    const SizedBox(height: 16),
+                                    const AppDeveloperFooterWidget(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // فاصل رأسي أنيق ومذهب
+                            VerticalDivider(
+                              color: const Color(0xFFD4AF37).withAlpha(80),
+                              width: 1,
+                              thickness: 1,
+                              indent: 20,
+                              endIndent: 20,
+                            ),
+                            // الجانب الآخر: القوائم الثلاثة للخدمات
+                            Expanded(
+                              flex: 3,
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 700,
                                   ),
-                                  child: Column(
+                                  child: const Row(
                                     children: [
-                                      const TodayTimesUpcomingPrayerCardWidget(),
-                                      const SizedBox(height: 16),
-                                      const HomeDateWidget(),
-                                      const SizedBox(height: 16),
-                                      const AppDeveloperFooterWidget(),
+                                      LiftFeaturesMenuWidget(),
+                                      MedlePublicInformationMenuWidget(),
+                                      RightFeaturesMenuWidget(),
                                     ],
                                   ),
                                 ),
                               ),
-                              // فاصل رأسي أنيق ومذهب
-                              VerticalDivider(
-                                color: const Color(0xFFD4AF37).withAlpha(80),
-                                width: 1,
-                                thickness: 1,
-                                indent: 20,
-                                endIndent: 20,
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            SizedBox(
+                              height: context.responsiveValue(
+                                mobile: 10.0,
+                                tablet: 20.0,
                               ),
-                              // الجانب الآخر: القوائم الثلاثة للخدمات
-                              Expanded(
-                                flex: 3,
-                                child: Center(
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 700,
-                                    ),
-                                    child: const Row(
-                                      children: [
-                                        LiftFeaturesMenuWidget(),
-                                        MedlePublicInformationMenuWidget(),
-                                        RightFeaturesMenuWidget(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                            ),
+                            const TodayTimesUpcomingPrayerCardWidget(),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const LiftFeaturesMenuWidget(),
+                                  const MedlePublicInformationMenuWidget(),
+                                  const RightFeaturesMenuWidget(),
+                                ],
                               ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              SizedBox(
-                                height: context.responsiveValue(
-                                  mobile: 10.0,
-                                  tablet: 20.0,
-                                ),
+                            ),
+                            const HomeDateWidget(),
+                            SizedBox(
+                              height: context.responsiveValue(
+                                mobile: 10.0,
+                                tablet: 20.0,
                               ),
-                              const TodayTimesUpcomingPrayerCardWidget(),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    const LiftFeaturesMenuWidget(),
-                                    const MedlePublicInformationMenuWidget(),
-                                    const RightFeaturesMenuWidget(),
-                                  ],
-                                ),
+                            ),
+                            const AppDeveloperFooterWidget(),
+                            SizedBox(
+                              height: context.responsiveValue(
+                                mobile: 10.0,
+                                tablet: 20.0,
                               ),
-                              const HomeDateWidget(),
-                              SizedBox(
-                                height: context.responsiveValue(
-                                  mobile: 10.0,
-                                  tablet: 20.0,
-                                ),
-                              ),
-                              const AppDeveloperFooterWidget(),
-                              SizedBox(
-                                height: context.responsiveValue(
-                                  mobile: 10.0,
-                                  tablet: 20.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
+          ),
         ),
       ],
     );

@@ -11,12 +11,20 @@ class SurahDetailsLoaded extends SurahDetailsState {
   final bool isAudioLoading;
   final double downloadProgress;
 
+  /// قائمة بمعرفات القراء التي تم تنزيل تلاوتهم لهذه السورة محلياً
+  final Set<String> downloadedReciterIds;
+
+  /// نسب التنزيل الحية للقراء الجاري تنزيلهم: reciterId -> 0.0..1.0
+  final Map<String, double> downloadingProgress;
+
   SurahDetailsLoaded({
     required this.ayahs,
     this.playingReciterId,
     this.isPlaying = false,
     this.isAudioLoading = false,
     this.downloadProgress = 0.0,
+    this.downloadedReciterIds = const {},
+    this.downloadingProgress = const {},
   });
 
   SurahDetailsLoaded copyWith({
@@ -26,6 +34,8 @@ class SurahDetailsLoaded extends SurahDetailsState {
     bool? isAudioLoading,
     double? downloadProgress,
     bool resetPlaying = false,
+    Set<String>? downloadedReciterIds,
+    Map<String, double>? downloadingProgress,
   }) {
     return SurahDetailsLoaded(
       ayahs: ayahs ?? this.ayahs,
@@ -39,6 +49,10 @@ class SurahDetailsLoaded extends SurahDetailsState {
       downloadProgress: resetPlaying
           ? 0.0
           : (downloadProgress ?? this.downloadProgress),
+      downloadedReciterIds:
+          downloadedReciterIds ?? this.downloadedReciterIds,
+      downloadingProgress:
+          downloadingProgress ?? this.downloadingProgress,
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
 
 part 'location_state.dart';
 
@@ -18,20 +19,40 @@ class LocationCubit extends Cubit<LocationState> {
       final prefs = await SharedPreferences.getInstance().timeout(
         const Duration(seconds: 2),
       );
+      final bool hasRealLocation = prefs.getBool('has_real_location') ?? false;
       final double? cachedLat = prefs.getDouble('lat');
       final double? cachedLng = prefs.getDouble('lng');
       final String cachedCity = prefs.getString('city_name') ?? "موقعي الحالي";
 
-      if (cachedLat != null && cachedLng != null) {
+      final bool isDefaultMecca = (cachedLat != null &&
+          (cachedLat - ForegroundNotificationService.defaultLat).abs() < 0.001 &&
+          cachedLng != null &&
+          (cachedLng - ForegroundNotificationService.defaultLng).abs() < 0.001 &&
+          (cachedCity == 'مكة المكرمة' || !hasRealLocation));
+
+      // 1. إذا كان هناك موقع حقيقي مؤكد محفوظ مسبقاً وليس مكة الافتراضية
+      if (hasRealLocation && !isDefaultMecca && cachedLat != null && cachedLng != null) {
         emit(LocationSuccess(
           latitude: cachedLat,
           longitude: cachedLng,
           isFromCache: true,
           cityName: cachedCity,
         ));
-      } else {
-        emit(LocationRequired());
+        return;
       }
+
+      // 2. إذا كانت صلاحية الموقع ممنوحة بالفعل في النظام، نجلب الموقع الفعلي فوراً وتلقائياً
+      final permission = await Geolocator.checkPermission();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled &&
+          (permission == LocationPermission.whileInUse ||
+              permission == LocationPermission.always)) {
+        await fetchAndSaveCurrentLocation();
+        return;
+      }
+
+      // 3. إذا لم تكن الصلاحية ممنوحة، نطلب من المستخدم تفعيلها
+      emit(LocationRequired());
     } catch (e) {
       dev.log("Error checking location on splash: $e");
       emit(LocationRequired());
@@ -47,11 +68,7 @@ class LocationCubit extends Cubit<LocationState> {
         longitude,
       );
       if (placemarks.isNotEmpty) {
-        final placemark = placemarks.first;
-        return placemark.locality ??
-            placemark.subAdministrativeArea ??
-            placemark.administrativeArea ??
-            "موقعي الحالي";
+        return ForegroundNotificationService.extractCityName(placemarks.first);
       }
     } catch (e) {
       dev.log("Error resolving address: $e");
@@ -66,7 +83,7 @@ class LocationCubit extends Cubit<LocationState> {
       // استدعاء الدالة المركزية المشتركة لجلب الموقع الجغرافي حياً
       final Position position = await _determinePosition();
 
-      // حل اسم المدينة
+      // حل اسم المدينة بدقة
       final String cityName = await _getCityName(position.latitude, position.longitude);
 
       // حفظ الإحداثيات واسم المدينة في SharedPreferences (المخزن الموحد للتطبيق والخدمة الخلفية)
@@ -74,6 +91,16 @@ class LocationCubit extends Cubit<LocationState> {
       await prefs.setDouble('lat', position.latitude);
       await prefs.setDouble('lng', position.longitude);
       await prefs.setString('city_name', cityName);
+      await prefs.setBool('has_real_location', true);
+
+      // تحديث الإشعار المستمر فوراً بالموقع الفعلي الجديد
+      if (ForegroundNotificationService.isSupported) {
+        await ForegroundNotificationService.start(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          cityName: cityName,
+        );
+      }
 
       emit(
         LocationSuccess(
@@ -102,6 +129,16 @@ class LocationCubit extends Cubit<LocationState> {
       await prefs.setDouble('lat', position.latitude);
       await prefs.setDouble('lng', position.longitude);
       await prefs.setString('city_name', cityName);
+      await prefs.setBool('has_real_location', true);
+
+      // تحديث الإشعار المستمر فوراً بالموقع الفعلي الجديد
+      if (ForegroundNotificationService.isSupported) {
+        await ForegroundNotificationService.start(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          cityName: cityName,
+        );
+      }
 
       emit(
         LocationSuccess(

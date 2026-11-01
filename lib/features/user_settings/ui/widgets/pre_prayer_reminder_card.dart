@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/notification_service.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
@@ -68,7 +70,8 @@ class _PrePrayerReminderCardState extends State<PrePrayerReminderCard> {
   }
 
   Future<void> _triggerTestReminder(int minutes, String soundPath) async {
-    final notificationService = DependencyInjection.getIt<NotificationService>();
+    final notificationService =
+        DependencyInjection.getIt<NotificationService>();
     final soundFileName = NotificationService.getRawSoundName(soundPath);
 
     await notificationService.showInstantPrePrayerReminder(
@@ -78,26 +81,140 @@ class _PrePrayerReminderCardState extends State<PrePrayerReminderCard> {
     );
 
     if (!mounted) return;
+
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                Localization.tr(
-                  context,
-                  ar: 'تم إرسال إشعار التذكير التجريبي بنجاح! تفقّد ستارة الإشعارات لتجربة الإغلاق والتمديد.',
-                  en: 'Test reminder notification sent! Check notifications to test dismiss and snooze.',
+            Row(
+              children: [
+                const Icon(Icons.alarm_on_rounded,
+                    color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    Localization.tr(
+                      context,
+                      ar: 'تم إرسال إشعار التذكير بنجاح! يمكنك التفاعل من الإشعار أو بالأسفل:',
+                      en: 'Reminder notification sent! You can interact via notification or below:',
+                    ),
+                    style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
-                style: const TextStyle(fontFamily: 'Cairo'),
-              ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.white70),
+                    foregroundColor: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    await notificationService.cancelNotification(7777);
+                    try {
+                      final player = DependencyInjection.getIt<AudioPlayer>();
+                      await player.stop();
+                    } catch (_) {}
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            Localization.tr(
+                              context,
+                              ar: 'تم إغلاق التذكير وإيقاف الصوت بنجاح.',
+                              en: 'Reminder dismissed and audio stopped.',
+                            ),
+                            style: const TextStyle(fontFamily: 'Cairo'),
+                          ),
+                          duration: const Duration(seconds: 2),
+                          backgroundColor: Colors.grey[800],
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(
+                    Localization.tr(context, ar: 'إغلاق', en: 'Dismiss'),
+                    style: const TextStyle(fontFamily: 'Cairo', fontSize: 12),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: ThemingColors.kAccent(context),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    await notificationService.cancelNotification(7777);
+                    try {
+                      final player = DependencyInjection.getIt<AudioPlayer>();
+                      await player.stop();
+                    } catch (_) {}
+                    await notificationService.handleSnoozeReminder(
+                      const NotificationResponse(
+                        notificationResponseType:
+                            NotificationResponseType.selectedNotificationAction,
+                        id: 7777,
+                        actionId: 'snooze_reminder',
+                        payload: 'pre_prayer_reminder|الظهر|5',
+                      ),
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            Localization.tr(
+                              context,
+                              ar: 'تم تمديد وقت التذكير 5 دقائق إضافية بنجاح.',
+                              en: 'Reminder snoozed for 5 minutes successfully.',
+                            ),
+                            style: const TextStyle(fontFamily: 'Cairo'),
+                          ),
+                          duration: const Duration(seconds: 3),
+                          backgroundColor: ThemingColors.kAccent(context),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(
+                    Localization.tr(
+                        context, ar: 'تمديد (5 دقائق)', en: 'Snooze (5 min)'),
+                    style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         backgroundColor: ThemingColors.kAccent(context),
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 8),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

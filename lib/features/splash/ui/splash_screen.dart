@@ -75,11 +75,12 @@ class _SplashScreenState extends State<SplashScreen> {
       final prefs = await SharedPreferences.getInstance().timeout(
         const Duration(seconds: 1),
       );
+      final bool hasRealLocation = prefs.getBool('has_real_location') ?? false;
       final double? cachedLat = prefs.getDouble('lat');
       final double? cachedLng = prefs.getDouble('lng');
       final String cachedCity = prefs.getString('city_name') ?? "موقعي الحالي";
 
-      if (cachedLat != null && cachedLng != null && mounted) {
+      if (hasRealLocation && cachedLat != null && cachedLng != null && mounted) {
         context.read<PrayerCubit>().fetchPrayerTimes(
           latitude: cachedLat,
           longitude: cachedLng,
