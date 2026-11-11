@@ -7,6 +7,8 @@ import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:prayer_times_quran_azkar_app/core/routing/routing_names.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/prayer_adhan_manager.dart';
 
@@ -60,10 +62,10 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // الاستماع لانتهاء تشغيل الأذان للإغلاق التلقائي الآمن إذا كانت الشاشة مستقلة
+    // الاستماع لانتهاء تشغيل الأذان للإغلاق التلقائي الآمن عند اكتمال الأذان
     _playerSubscription = _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        if (widget.isStandalone && !_isClosing && mounted) {
+        if (!widget.isPreview && !_isClosing && mounted) {
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted && !_isClosing) {
               _stopAndClose();
@@ -178,20 +180,32 @@ class _AdhanAlarmScreenState extends State<AdhanAlarmScreen>
 
     if (!mounted) return;
 
-    // 🛡️ حماية صارمة: إذا تم إطلاق الشاشة كمنبه عند دخول وقت الصلاة:
-    // نخرج من التطبيق تماماً (SystemNavigator.pop) ليعود المستخدم لهاتفه أو شاشة القفل،
-    // ولا يفتح التطبيق تحته أو بعده.
-    if (widget.isStandalone && !widget.isPreview) {
-      if (!kIsWeb && Platform.isWindows) {
-        try {
-          await windowManager.hide();
-        } catch (_) {}
-      } else {
-        await SystemNavigator.pop();
-      }
-    } else {
-      // إذا كانت معاينة من الإعدادات أو المستخدم كان يتصفح التطبيق مسبقاً
+    // 🛡️ إذا كانت مجرد معاينة من الإعدادات، نكتفي بالرجوع لشاشة الإعدادات
+    if (widget.isPreview) {
       Navigator.of(context).pop();
+      return;
+    }
+
+    // 🛡️ حماية صارمة: عند موعد الأذان الحقيقي (سواء أُطلق من الخلفية أو شاشة القفل أو أثناء التصفح):
+    // نقوم بتجهيز شاشة التطبيق الرئيسية بالخلفية لفتحها عند استخدام التطبيق لاحقاً،
+    // ثم تصغير التطبيق وإرجاع الهاتف فوراً إلى ما كان عليه قبل ظهور شاشة الأذان (شاشة القفل، أو التطبيق السابق).
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushReplacementNamed(RoutingNames.home.route);
+    }
+
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        FlutterForegroundTask.setOnLockScreenVisibility(false);
+      } catch (_) {}
+      FlutterForegroundTask.minimizeApp();
+    } else if (!kIsWeb && Platform.isWindows) {
+      try {
+        await windowManager.hide();
+      } catch (_) {}
+    } else {
+      await SystemNavigator.pop();
     }
   }
 

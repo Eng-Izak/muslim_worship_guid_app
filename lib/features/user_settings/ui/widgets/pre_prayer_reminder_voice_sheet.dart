@@ -62,9 +62,12 @@ class _PrePrayerReminderVoiceSheetState
           _isPlaying = false;
         });
       } else {
-        if (_isPlaying != state.playing) {
+        final isNowPlaying = state.playing &&
+            state.processingState != ProcessingState.idle &&
+            state.processingState != ProcessingState.completed;
+        if (_isPlaying != isNowPlaying) {
           setState(() {
-            _isPlaying = state.playing;
+            _isPlaying = isNowPlaying;
           });
         }
       }
@@ -107,16 +110,6 @@ class _PrePrayerReminderVoiceSheetState
   }
 
   String _getVoiceTitle(BuildContext context, String path, int index) {
-    final fileName = path.split('/').last.replaceAll('.mp3', '');
-    final match = RegExp(r't\s*\((\d+)\)').firstMatch(fileName);
-    if (match != null) {
-      final num = match.group(1);
-      return Localization.tr(
-        context,
-        ar: 'نغمة التذكير $num',
-        en: 'Reminder Tone $num',
-      );
-    }
     return Localization.tr(
       context,
       ar: 'نغمة التذكير ${index + 1}',
@@ -125,14 +118,25 @@ class _PrePrayerReminderVoiceSheetState
   }
 
   Future<void> _togglePlayPreview(String path) async {
-    try {
-      if (_playingPath == path && _isPlaying) {
+    if (_playingPath == path) {
+      if (_isPlaying) {
         await _audioPlayer.pause();
-        setState(() => _isPlaying = false);
-        return;
+        if (mounted) setState(() => _isPlaying = false);
+      } else {
+        await _audioPlayer.play();
+        if (mounted) setState(() => _isPlaying = true);
       }
+      return;
+    }
 
+    try {
       await _audioPlayer.stop();
+      if (mounted) {
+        setState(() {
+          _playingPath = path;
+          _isPlaying = true;
+        });
+      }
 
       final byteData = await rootBundle.load(path);
       final sanitizedFileName =
@@ -149,7 +153,7 @@ class _PrePrayerReminderVoiceSheetState
       final audioSource = AudioSource.file(
         tempFile.path,
         tag: MediaItem(
-          id: 'tazkir_preview_${DateTime.now().millisecondsSinceEpoch}',
+          id: 'tazkir_preview_$sanitizedFileName',
           title: 'معاينة نغمة التذكير',
           album: 'تذكير ما قبل الصلاة',
           artist: 'دليل عبادات المسلم',
@@ -159,13 +163,6 @@ class _PrePrayerReminderVoiceSheetState
       await _audioPlayer.setAudioSource(audioSource);
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.play();
-
-      if (mounted) {
-        setState(() {
-          _playingPath = path;
-          _isPlaying = true;
-        });
-      }
     } catch (e) {
       debugPrint("Error previewing tazkir sound: $e");
       if (mounted) {
@@ -415,26 +412,33 @@ class _PrePrayerReminderVoiceSheetState
                                     ),
                                   ),
 
-                                  // زر المعاينة والاستماع
-                                  GestureDetector(
-                                    onTap: () => _togglePlayPreview(path),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: isThisPlaying
-                                            ? ThemingColors.kAccent(context)
-                                            : ThemingColors.kAccent(context)
-                                                .withValues(alpha: 0.15),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        isThisPlaying
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
-                                        size: 20,
-                                        color: isThisPlaying
-                                            ? Colors.white
-                                            : ThemingColors.kAccent(context),
+                                  // زر المعاينة والاستماع (تشغيل / إيقاف)
+                                  Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => _togglePlayPreview(path),
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: isThisPlaying
+                                                ? ThemingColors.kAccent(context)
+                                                : ThemingColors.kAccent(context)
+                                                    .withValues(alpha: 0.15),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            isThisPlaying
+                                                ? Icons.pause_rounded
+                                                : Icons.play_arrow_rounded,
+                                            size: 20,
+                                            color: isThisPlaying
+                                                ? Colors.white
+                                                : ThemingColors.kAccent(context),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),

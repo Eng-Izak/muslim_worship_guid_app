@@ -10,6 +10,11 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    hide NotificationVisibility;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as fln show NotificationVisibility;
+import 'package:prayer_times_quran_azkar_app/core/services/notification_service.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
 
 /// دالة رد الاتصال الخلفية المفتوحة لبدء تشغيل الخدمة (يجب أن تكون Top-Level)
@@ -345,6 +350,8 @@ class NotificationTaskHandler extends TaskHandler {
   Timer? _secondTimer;
   int _lastTickSecond = -1;
   int _tickCount = 0;
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> _loadLocationData() async {
     try {
@@ -422,6 +429,20 @@ class NotificationTaskHandler extends TaskHandler {
     } catch (e) {
       log("Error initializing date formatting in background: $e");
     }
+
+    try {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/launcher_icon');
+      await _localNotifications.initialize(
+        settings: const InitializationSettings(
+          android: initializationSettingsAndroid,
+        ),
+        onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+      );
+    } catch (e) {
+      log("Error initializing local notifications in background task: $e");
+    }
+
     await _loadLocationData();
     _recalculatePrayerTimes(DateTime.now());
     _tick();
@@ -449,9 +470,10 @@ class NotificationTaskHandler extends TaskHandler {
       await _loadLocationData();
     }
 
-    // 2. التحقق من دخول وقت الصلاة وإطلاق الأذان كل 5 ثوانٍ
+    // 2. التحقق من دخول وقت الصلاة وإطلاق الأذان والتذكير كل 5 ثوانٍ
     if (_tickCount % 5 == 0) {
       await _checkBackgroundAdhanTrigger();
+      await _checkBackgroundPrePrayerReminder();
     }
 
     // 3. إذا لم يتم حساب موعد الصلاة بعد أو حان وقت إعادة الحساب (دخلت الصلاة)
@@ -548,6 +570,180 @@ class NotificationTaskHandler extends TaskHandler {
       }
     } catch (e) {
       log("Error checking background Adhan trigger: $e");
+    }
+  }
+
+  /// فحص وإطلاق تنبيه التذكير قبل الصلاة بدقة بالغة من خلال الخدمة المستمرة
+  Future<void> _checkBackgroundPrePrayerReminder() async {
+    if (_latitude == 0.0 || _longitude == 0.0) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // 1. التحقق من وجود تنبيه ممتد (Snooze) حان موعده
+      final int? snoozeTimestamp = prefs.getInt('active_snooze_timestamp');
+      if (snoozeTimestamp != null) {
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+        final diffMs = nowMs - snoozeTimestamp;
+        // إذا حان وقت التمديد (في نافذة دقيقة واحدة)
+        if (diffMs >= 0 && diffMs <= 60000) {
+          await prefs.remove('active_snooze_timestamp');
+          final String snoozePrayer =
+              prefs.getString('active_snooze_prayer') ?? 'الصلاة';
+          final String rawSound =
+              prefs.getString('pre_prayer_reminder_sound') ??
+                  'assets/audio/tazkir/t (1).mp3';
+          final String soundFileName =
+              NotificationService.getRawSoundName(rawSound);
+
+          log("⏳ [Background Task] إطلاق إشعار التمديد لصلاة $snoozePrayer...");
+          await _showPrePrayerReminderNotification(
+            id: 9995,
+            prayerName: snoozePrayer,
+            minutesBefore: 5,
+            soundFileName: soundFileName,
+            isSnooze: true,
+          );
+        } else if (diffMs > 60000) {
+          await prefs.remove('active_snooze_timestamp');
+        }
+      }
+
+      // 2. التحقق من تفعيل ميزة التذكير
+      final bool isEnabled =
+          prefs.getBool('pre_prayer_reminder_enabled') ?? true;
+      if (!isEnabled) return;
+
+      final int reminderMinutes =
+          prefs.getInt('pre_prayer_reminder_minutes') ?? 10;
+      final String rawSound = prefs.getString('pre_prayer_reminder_sound') ??
+          'assets/audio/tazkir/t (1).mp3';
+      final String soundFileName =
+          NotificationService.getRawSoundName(rawSound);
+
+      final now = DateTime.now();
+      final coordinates = Coordinates(_latitude, _longitude);
+      final params = CalculationParameters(
+        method: CalculationMethod.egyptian,
+        fajrAngle: 19.5,
+        ishaAngle: 17.5,
+        madhab: Madhab.shafi,
+      );
+
+      final prayerTimes = PrayerTimes(
+        date: now,
+        coordinates: coordinates,
+        calculationParameters: params,
+      );
+
+      final prayers = [
+        {'id': 1, 'name': 'الفجر', 'time': prayerTimes.fajr},
+        {'id': 2, 'name': 'الظهر', 'time': prayerTimes.dhuhr},
+        {'id': 3, 'name': 'العصر', 'time': prayerTimes.asr},
+        {'id': 4, 'name': 'المغرب', 'time': prayerTimes.maghrib},
+        {'id': 5, 'name': 'العشاء', 'time': prayerTimes.isha},
+      ];
+
+      for (final prayer in prayers) {
+        final int id = prayer['id'] as int;
+        final String name = prayer['name'] as String;
+        final DateTime prayerTime = prayer['time'] as DateTime;
+
+        final DateTime reminderTime =
+            prayerTime.subtract(Duration(minutes: reminderMinutes));
+        final int diffInSeconds = now.difference(reminderTime).inSeconds;
+
+        // إذا كان الفارق بين 0 و 60 ثانية (أي وقت التذكير دخل الآن)
+        if (diffInSeconds >= 0 && diffInSeconds <= 60) {
+          final String todayKey =
+              '${now.year}-${now.month}-${now.day}_${name}_reminder';
+          final List<String> triggeredList =
+              prefs.getStringList('triggered_reminders_today') ?? [];
+
+          if (!triggeredList.contains(todayKey)) {
+            triggeredList.add(todayKey);
+            // الاحتفاظ فقط بمفاتيح اليوم لتجنب تراكم المفاتيح القديمة
+            final todayPrefix = '${now.year}-${now.month}-${now.day}_';
+            final cleanList =
+                triggeredList.where((k) => k.startsWith(todayPrefix)).toList();
+            await prefs.setStringList('triggered_reminders_today', cleanList);
+
+            log("🔔 [Foreground Service] إطلاق إشعار التذكير قبل صلاة $name ($reminderMinutes دقيقة)...");
+            await _showPrePrayerReminderNotification(
+              id: 200 + id,
+              prayerName: name,
+              minutesBefore: reminderMinutes,
+              soundFileName: soundFileName,
+              isSnooze: false,
+            );
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      log("Error checking background pre-prayer reminder: $e");
+    }
+  }
+
+  Future<void> _showPrePrayerReminderNotification({
+    required int id,
+    required String prayerName,
+    required int minutesBefore,
+    required String soundFileName,
+    bool isSnooze = false,
+  }) async {
+    final List<AndroidNotificationAction> actions = [
+      const AndroidNotificationAction(
+        'dismiss_reminder',
+        'إغلاق',
+        cancelNotification: true,
+        showsUserInterface: false,
+      ),
+      const AndroidNotificationAction(
+        'snooze_reminder',
+        'تمديد (5 دقائق)',
+        cancelNotification: true,
+        showsUserInterface: false,
+      ),
+    ];
+
+    final androidDetails = AndroidNotificationDetails(
+      'pre_prayer_reminder_v4_$soundFileName',
+      'تذكير ما قبل الصلاة',
+      channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
+      importance: Importance.max,
+      priority: Priority.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound(soundFileName),
+      actions: actions,
+      category: AndroidNotificationCategory.reminder,
+      visibility: fln.NotificationVisibility.public,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      enableVibration: true,
+      fullScreenIntent: false,
+      ticker: 'اقتراب موعد صلاة $prayerName',
+    );
+
+    final platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    final String title = isSnooze
+        ? '⏳ تنبيه ممتد: اقتراب صلاة $prayerName'
+        : '🔔 اقتراب موعد صلاة $prayerName';
+    final String body = isSnooze
+        ? 'انتهت 5 دقائق من التمديد. حان وقت الاستعداد لصلاة $prayerName.'
+        : 'متبقي $minutesBefore دقائق على أذان صلاة $prayerName. استعد للوضوء والتهيؤ للصلاة.';
+
+    try {
+      await _localNotifications.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: platformDetails,
+        payload: 'pre_prayer_reminder|$prayerName|$minutesBefore',
+      );
+    } catch (e) {
+      log("Error showing background pre-prayer notification: $e");
     }
   }
 

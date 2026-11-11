@@ -183,103 +183,123 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget> {
     return _buildActiveCompassView(context);
   }
 
-  /// شاشة الأجهزة التي تفتقر لمستشعر البوصلة / الجيروسكوب (تنبيه احترافي وتوجيه يدوي دقيق)
+  /// شاشة الأجهزة التي تفتقر لمستشعر الجيروسكوب / البوصلة (رسالة صريحة وتوضيح بديل)
   Widget _buildUnsupportedSensorView(BuildContext context) {
-    final double compassSize = (context.screenWidth * 0.65).clamp(200.0, 270.0);
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // كارت التنبيه البارز والشرح الصريح لعدم وجود مستشعر
+          const SizedBox(height: 10),
+
+          // 1. أيقونة توضيحية بارزة لعدم دعم مستشعر الجيروسكوب
           Container(
-            padding: const EdgeInsets.all(16),
+            width: 96,
+            height: 96,
             decoration: BoxDecoration(
+              shape: BoxShape.circle,
               color: const Color(0xFFD97706).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFD97706).withValues(alpha: 0.4),
-                width: 1.5,
+                color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                width: 2,
+              ),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.screen_rotation_alt_rounded,
+                size: 48,
+                color: Color(0xFFD97706),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // 2. العنوان الرئيسي الصريح
+          Text(
+            Localization.tr(
+              context,
+              ar: "تعذر تحديد اتجاه القبلة تلقائياً",
+              en: "Unable to Determine Qibla Automatically",
+            ),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: context.setSp(20),
+              fontWeight: FontWeight.bold,
+              color: ThemingColors.kTextMain(context),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 3. شارة بارزة تفيد بعدم دعم الهاتف للجيروسكوب
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                width: 1.2,
               ),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
                   Icons.sensors_off_rounded,
-                  color: Color(0xFFD97706),
-                  size: 32,
+                  size: 18,
+                  color: Color(0xFFEF4444),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        Localization.tr(
-                          context,
-                          ar: "تنبيه: لا يتوفر مستشعر بوصلة في هذا الجهاز",
-                          en: "Notice: No compass sensor on this device",
-                        ),
-                        style: TextStyle(
-                          fontSize: context.setSp(14),
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFFD97706),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        Localization.tr(
-                          context,
-                          ar: "هذا الجهاز لا يحتوي على مستشعر البوصلة المغناطيسية (Compass / Magnetometer Sensor)، ولذلك لا يمكن تدوير البوصلة تلقائياً مع حركة الهاتف.\n\n📍 تم حساب زاوية القبلة لموقعك بدقة تامة، ويمكنك الاستعانة بالوضع اليدوي أدناه لتحديد القبلة.",
-                          en: "This device lacks a hardware magnetic compass sensor. Qibla angle is calculated accurately below for manual orientation.",
-                        ),
-                        style: TextStyle(
-                          fontSize: context.setSp(12),
-                          color: ThemingColors.kTextMain(context),
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 8),
+                Text(
+                  Localization.tr(
+                    context,
+                    ar: "الهاتف لا يدعم مستشعر الجيروسكوب (Gyroscope)",
+                    en: "Device does not support Gyroscope sensor",
+                  ),
+                  style: TextStyle(
+                    fontSize: context.setSp(12),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFEF4444),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-
-          // كروت البيانات الجغرافية الدقيقة (المسافة وزاوية القبلة)
-          _buildInfoCards(context),
           const SizedBox(height: 20),
 
-          // البوصلة الثابتة للتوجيه اليدوي
-          Center(
-            child: SizedBox(
-              width: compassSize,
-              height: compassSize,
-              child: CustomPaint(
-                painter: _CompassDialPainter(
-                  dialRotationDegrees: 0.0,
-                  qiblaDirectionDegrees: widget.qiblaData.qiblaDirection,
-                  isFacingQibla: false,
-                  context: context,
-                ),
-                child: Center(
-                  child: Transform.rotate(
-                    angle: (widget.qiblaData.qiblaDirection - 90) * pi / 180.0,
-                    child: Icon(
-                      Icons.navigation_rounded,
-                      size: compassSize * 0.42,
-                      color: ThemingColors.kHadithAccentBorder(context),
-                    ),
-                  ),
-                ),
+          // 4. بطاقة الشرح المفصل لسبب عدم القدرة على تحديد الاتجاه
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: ThemingColors.kCardBackground(context),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: ThemingColors.kCardBorder(context),
+                width: 1.2,
+              ),
+              boxShadow: ThemingColors.kCardShadow(context),
+            ),
+            child: Text(
+              Localization.tr(
+                context,
+                ar: "لتحديد اتجاه القبلة الحية وتحريك البوصلة بدقة مع تدوير يدك، يتطلب التطبيق وجود مستشعر الجيروسكوب (Gyroscope) والبوصلة المغناطيسية المدمجة في عتاد الهاتف.\n\nللأسف، هذا الهاتف غير مجهز بهذه المستشعرات، ولذلك يتعذر تحديد وتدوير اتجاه القبلة تلقائياً أثناء الحركة.",
+                en: "Live interactive Qibla orientation requires a hardware Gyroscope & Compass sensor. This device does not have these sensors built-in, so the compass cannot rotate automatically.",
+              ),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: context.setSp(13),
+                color: ThemingColors.kTextMain(context),
+                height: 1.6,
               ),
             ),
           ),
           const SizedBox(height: 20),
 
-          // إرشادات الاستخدام اليدوي
+          // 5. بطاقات البيانات المحسوبة بدقة لموقع المستخدم
+          _buildInfoCards(context),
+          const SizedBox(height: 20),
+
+          // 6. بطاقة إرشادية بديلة للاستفادة من زاوية القبلة المحسوبة يدوياً
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -305,8 +325,8 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget> {
                     Text(
                       Localization.tr(
                         context,
-                        ar: "كيفية تحديد القبلة يدوياً:",
-                        en: "How to find Qibla manually:",
+                        ar: "كيفية الاستدلال على القبلة يدوياً بالزاوية:",
+                        en: "Manual guidance using calculated angle:",
                       ),
                       style: TextStyle(
                         fontSize: context.setSp(13),
@@ -316,12 +336,12 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
                   Localization.tr(
                     context,
-                    ar: "١. حدد اتجاه الشمال الجغرافي (مثلاً: عبر شروق الشمس من الشرق أو معالم معروفة).\n٢. وجّه أعلى الهاتف نحو الشمال (0°).\n٣. اتجاه القبلة لموقعك هو السهم الذهبي عند زاوية ${widget.qiblaData.qiblaDirection.toStringAsFixed(1)}°.",
-                    en: "1. Locate North geographically.\n2. Point the top of your phone North (0°).\n3. Qibla is indicated by the golden arrow at angle ${widget.qiblaData.qiblaDirection.toStringAsFixed(1)}°.",
+                    ar: "• زاوية القبلة لموقعك الحالي هي: ${widget.qiblaData.qiblaDirection.toStringAsFixed(1)}° بالنسبة للشمال الحقيقي (0°).\n• يمكنك الاستعانة باتجاه شروق الشمس (الشرق 90°) أو المعالم الجغرافية المعروفة لتحديد الشمال، ثم الانحراف بزاوية ${widget.qiblaData.qiblaDirection.toStringAsFixed(1)}° لتحديد اتجاه الكعبة المشرفة.",
+                    en: "• Qibla angle for your current location is ${widget.qiblaData.qiblaDirection.toStringAsFixed(1)}° from true North (0°).\n• You can determine true North via sunrise (East 90°) or landmarks, then orient yourself at ${widget.qiblaData.qiblaDirection.toStringAsFixed(1)}° towards Mecca.",
                   ),
                   style: TextStyle(
                     fontSize: context.setSp(12),
@@ -332,6 +352,7 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -504,7 +525,7 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget> {
                     child: Center(
                       // ج. سهم القبلة الداخلي المتجه دائماً إلى الكعبة المشرفة
                       child: Transform.rotate(
-                        angle: (relativeQiblaAngle - 90.0) * pi / 180.0,
+                        angle: relativeQiblaAngle * pi / 180.0,
                         child: Stack(
                           alignment: Alignment.center,
                           children: [

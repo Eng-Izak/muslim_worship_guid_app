@@ -32,6 +32,9 @@ void notificationTapBackground(NotificationResponse response) async {
     try {
       await plugin.cancel(id: id);
       await plugin.cancel(id: 7777);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('active_snooze_timestamp');
+      await prefs.remove('active_snooze_prayer');
     } catch (_) {}
     log("🛑 [Background Action] تم إغلاق التذكير بنجاح.");
     return;
@@ -53,6 +56,14 @@ void notificationTapBackground(NotificationResponse response) async {
     }
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final snoozeTimestamp =
+          DateTime.now().add(const Duration(minutes: 5)).millisecondsSinceEpoch;
+      await prefs.setInt('active_snooze_timestamp', snoozeTimestamp);
+      await prefs.setString('active_snooze_prayer', prayerName);
+    } catch (_) {}
+
+    try {
       tz.initializeTimeZones();
     } catch (_) {}
 
@@ -64,24 +75,28 @@ void notificationTapBackground(NotificationResponse response) async {
         'dismiss_reminder',
         'إغلاق',
         cancelNotification: true,
-        showsUserInterface: true,
+        showsUserInterface: false,
       ),
       const AndroidNotificationAction(
         'snooze_reminder',
         'تمديد (5 دقائق)',
         cancelNotification: true,
-        showsUserInterface: true,
+        showsUserInterface: false,
       ),
     ];
 
     final androidDetails = AndroidNotificationDetails(
-      'pre_prayer_reminder_v3_default',
+      'pre_prayer_reminder_v4_default',
       'تذكير ما قبل الصلاة',
       channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
       importance: Importance.max,
-      priority: Priority.high,
+      priority: Priority.max,
       playSound: true,
       actions: actions,
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      enableVibration: true,
     );
 
     final platformDetails = NotificationDetails(
@@ -140,9 +155,15 @@ class NotificationService {
 
   /// استخراج اسم الملف الصوتي بنسق أندرويد الخام من مسار أصل التذكير
   static String getRawSoundName(String path) {
+    if (path.startsWith('tazkir_')) {
+      if (path == 'tazkir_2') return 'tazkir_1';
+      return path;
+    }
     final match = RegExp(r't\s*\((\d+)\)').firstMatch(path);
     if (match != null) {
-      return 'tazkir_${match.group(1)}';
+      final num = match.group(1);
+      if (num == '2') return 'tazkir_1';
+      return 'tazkir_$num';
     }
     return 'tazkir_1';
   }
@@ -300,6 +321,11 @@ class NotificationService {
       final snoozeTime = DateTime.now().add(const Duration(minutes: 5));
 
       final prefs = await SharedPreferences.getInstance();
+      final snoozeTimestamp =
+          DateTime.now().add(const Duration(minutes: 5)).millisecondsSinceEpoch;
+      await prefs.setInt('active_snooze_timestamp', snoozeTimestamp);
+      await prefs.setString('active_snooze_prayer', prayerName);
+
       final soundPath = prefs.getString('pre_prayer_reminder_sound') ??
           'assets/audio/tazkir/t (1).mp3';
       final soundFileName = getRawSoundName(soundPath);
@@ -466,37 +492,49 @@ class NotificationService {
         'dismiss_reminder',
         'إغلاق',
         cancelNotification: true,
-        showsUserInterface: true,
+        showsUserInterface: false,
       ),
       const AndroidNotificationAction(
         'snooze_reminder',
         'تمديد (5 دقائق)',
         cancelNotification: true,
-        showsUserInterface: true,
+        showsUserInterface: false,
       ),
     ];
 
     final AndroidNotificationDetails androidDetails;
     if (soundFileName != null) {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_v3_$soundFileName',
+        'pre_prayer_reminder_v4_$soundFileName',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
         playSound: true,
         sound: RawResourceAndroidNotificationSound(soundFileName),
         actions: actions,
+        category: AndroidNotificationCategory.reminder,
+        visibility: NotificationVisibility.public,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        enableVibration: true,
+        fullScreenIntent: false,
+        ticker: 'اقتراب موعد صلاة $prayerName',
       );
     } else {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_v3_default',
+        'pre_prayer_reminder_v4_default',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
         playSound: true,
         actions: actions,
+        category: AndroidNotificationCategory.reminder,
+        visibility: NotificationVisibility.public,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        enableVibration: true,
+        fullScreenIntent: false,
+        ticker: 'اقتراب موعد صلاة $prayerName',
       );
     }
 
@@ -573,37 +611,49 @@ class NotificationService {
         'dismiss_reminder',
         'إغلاق',
         cancelNotification: true,
-        showsUserInterface: true,
+        showsUserInterface: false,
       ),
       const AndroidNotificationAction(
         'snooze_reminder',
         'تمديد (5 دقائق)',
         cancelNotification: true,
-        showsUserInterface: true,
+        showsUserInterface: false,
       ),
     ];
 
     final AndroidNotificationDetails androidDetails;
     if (soundFileName != null) {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_v3_$soundFileName',
+        'pre_prayer_reminder_v4_$soundFileName',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
         playSound: true,
         sound: RawResourceAndroidNotificationSound(soundFileName),
         actions: actions,
+        category: AndroidNotificationCategory.reminder,
+        visibility: NotificationVisibility.public,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        enableVibration: true,
+        fullScreenIntent: false,
+        ticker: 'اقتراب موعد صلاة $prayerName',
       );
     } else {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_v3_default',
+        'pre_prayer_reminder_v4_default',
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
         playSound: true,
         actions: actions,
+        category: AndroidNotificationCategory.reminder,
+        visibility: NotificationVisibility.public,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        enableVibration: true,
+        fullScreenIntent: false,
+        ticker: 'اقتراب موعد صلاة $prayerName',
       );
     }
 

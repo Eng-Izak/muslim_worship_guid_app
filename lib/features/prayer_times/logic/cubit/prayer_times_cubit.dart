@@ -7,6 +7,7 @@ import 'package:hive/hive.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prayer_times_quran_azkar_app/core/dependency_injection/dependency_injection.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/notification_service.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/names_translation_extension.dart';
@@ -296,6 +297,13 @@ class PrayerCubit extends Cubit<PrayerStates> {
       );
       final String rawReminderSound =
           NotificationService.getRawSoundName(reminderSound);
+
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('pre_prayer_reminder_enabled', isPreReminderEnabled);
+        await prefs.setInt('pre_prayer_reminder_minutes', reminderMinutes);
+        await prefs.setString('pre_prayer_reminder_sound', reminderSound);
+      } catch (_) {}
 
       // قائمة الصلوات الخمس بأسمائها ومواقيتها
       final prayers = [

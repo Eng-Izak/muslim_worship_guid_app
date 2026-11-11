@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/app_developer_footer_widget.dart';
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/background_image_widget.dart';
+import 'package:prayer_times_quran_azkar_app/core/shared/widgets/background_permissions_disclosure_dialog.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 import 'package:prayer_times_quran_azkar_app/features/home/ui/widgets/home_app_bar_widget.dart';
 import 'package:prayer_times_quran_azkar_app/features/home/ui/widgets/home_date_widget.dart';
@@ -37,6 +38,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if ((!hasRealLocation || isMecca) && mounted) {
           context.read<LocationCubit>().fetchAndSaveCurrentLocation();
+        }
+
+        // إظهار نافذة الأذونات الهامة (استثناء البطارية والظهور فوق التطبيقات) لأول مرة بعد طلب إذن الموقع
+        if (mounted) {
+          await Future.delayed(const Duration(milliseconds: 600));
+          if (mounted) {
+            await BackgroundPermissionsDisclosureDialog.checkAndShowInitialPrompt(
+              context,
+            );
+          }
         }
       } catch (_) {}
     });

@@ -147,7 +147,7 @@ class PrayerAdhanManager {
             prayerName: name,
             prayerTime: DateFormat.jm().format(time.toLocal()),
             cityName: cityName,
-            isStandalone: false, // تم الإطلاق أثناء استخدام التطبيق
+            isStandalone: true,
           );
           break;
         }
