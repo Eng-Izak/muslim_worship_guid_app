@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:prayer_times_quran_azkar_app/core/services/foreground_notification_service.dart';
+import 'package:prayer_times_quran_azkar_app/core/shared/widgets/overlay_permission_guide_dialog.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/localization.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
 
@@ -71,7 +72,24 @@ class _PersistentNotificationCardState
 
   Future<void> _requestOverlayPermission() async {
     try {
-      await FlutterForegroundTask.openSystemAlertWindowSettings();
+      await OverlayPermissionGuideDialog.show(
+        context,
+        onSettingsOpened: () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  '💡 اختر «دليل عبادات المسلم» ثم فعّل مفتاح السماح',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Color(0xFF153E32),
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+        },
+      );
       await Future.delayed(const Duration(milliseconds: 800));
       await _checkStatus();
     } catch (_) {}
@@ -269,6 +287,39 @@ class _PersistentNotificationCardState
                       fontFamily: 'Cairo',
                       fontSize: 12,
                       color: ThemingColors.kTextSecondary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.amber.withValues(alpha: 0.35),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.tips_and_updates_outlined,
+                          size: 16,
+                          color: Colors.amber,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'اختر «دليل عبادات المسلم» من قائمة الإعدادات ثم فعّل المفتاح.',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11,
+                              color: ThemingColors.kTextMain(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),

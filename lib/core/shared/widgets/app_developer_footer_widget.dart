@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
+import 'package:prayer_times_quran_azkar_app/core/helpers/app_share_helper.dart';
 
 class AppDeveloperFooterWidget extends StatelessWidget {
   const AppDeveloperFooterWidget({super.key});
@@ -30,11 +31,16 @@ class AppDeveloperFooterWidget extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 450),
           child: SafeArea(
             top: false,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                child: Row(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => AppShareHelper.showShareAndAppsModal(context),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // الجزء الأيسر: الشعار والنص الإنجليزي
@@ -115,6 +121,8 @@ class AppDeveloperFooterWidget extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

@@ -47,20 +47,45 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget> {
     _startCompass();
   }
 
+  static const MethodChannel _lifecycleChannel =
+      MethodChannel('com.izakrammah.muslim_worship_guid_app/lifecycle');
+
   /// تهيئة مستشعر البوصلة عبر `flutter_compass` مع فحص الأمان واكتشاف عدم الدعم
-  void _startCompass() {
+  Future<void> _startCompass() async {
     if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
-      setState(() {
-        _hasSensor = false;
-      });
+      if (mounted) {
+        setState(() {
+          _hasSensor = false;
+        });
+      }
       return;
+    }
+
+    // 1. التحقق الفعلي الصريح من وجود عتاد البوصلة المغناطيسية أو الجيروسكوب في الجهاز
+    if (Platform.isAndroid) {
+      try {
+        final bool? hasHardware =
+            await _lifecycleChannel.invokeMethod<bool>('hasCompassHardware');
+        if (hasHardware == false) {
+          if (mounted) {
+            setState(() {
+              _hasSensor = false;
+            });
+          }
+          return;
+        }
+      } catch (e) {
+        debugPrint("Error checking compass hardware: $e");
+      }
     }
 
     final events = FlutterCompass.events;
     if (events == null) {
-      setState(() {
-        _hasSensor = false;
-      });
+      if (mounted) {
+        setState(() {
+          _hasSensor = false;
+        });
+      }
       return;
     }
 

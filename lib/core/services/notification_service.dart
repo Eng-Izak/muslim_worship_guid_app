@@ -487,6 +487,45 @@ class NotificationService {
   }) async {
     if (!isSupported) return;
 
+    // 1. التأكد من صلاحية الإشعارات
+    try {
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      final bool? areEnabled = await androidPlugin?.areNotificationsEnabled();
+      if (areEnabled == false) {
+        await requestPermissions();
+      }
+    } catch (_) {}
+
+    // 2. إنشاء قناة الإشعار بشكل صريح ومسبق
+    final String channelId = soundFileName != null
+        ? 'pre_prayer_reminder_v4_$soundFileName'
+        : 'pre_prayer_reminder_v4_default';
+
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        final androidPlugin = _notificationsPlugin
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>();
+        final channel = AndroidNotificationChannel(
+          channelId,
+          'تذكير ما قبل الصلاة',
+          description: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
+          importance: Importance.max,
+          playSound: true,
+          sound: soundFileName != null
+              ? RawResourceAndroidNotificationSound(soundFileName)
+              : null,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
+          enableVibration: true,
+        );
+        await androidPlugin?.createNotificationChannel(channel);
+      } catch (e) {
+        log("Error creating notification channel: $e");
+      }
+    }
+
     final List<AndroidNotificationAction> actions = [
       const AndroidNotificationAction(
         'dismiss_reminder',
@@ -505,7 +544,7 @@ class NotificationService {
     final AndroidNotificationDetails androidDetails;
     if (soundFileName != null) {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_v4_$soundFileName',
+        channelId,
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
@@ -522,7 +561,7 @@ class NotificationService {
       );
     } else {
       androidDetails = AndroidNotificationDetails(
-        'pre_prayer_reminder_v4_default',
+        channelId,
         'تذكير ما قبل الصلاة',
         channelDescription: 'تنبيهات اقتراب موعد الصلاة للاستعداد والوضوء',
         importance: Importance.max,
@@ -549,10 +588,10 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    if (!kIsWeb && Platform.isWindows) {
-      await _playTazkirSound(soundFileName);
-    }
+    // 3. تشغيل صوت التذكير مباشرة عبر مشغل الصوت لضمان سماعه
+    await _playTazkirSound(soundFileName);
 
+    // 4. إظهار الإشعار مع حماية Fallback كاملة
     try {
       await _notificationsPlugin.show(
         id: 7777,
@@ -563,7 +602,30 @@ class NotificationService {
         payload: 'pre_prayer_reminder|$prayerName|$minutesBefore',
       );
     } catch (e) {
-      log("Error showing instant pre-prayer reminder: $e");
+      log("Error showing custom instant pre-prayer reminder: $e, trying fallback...");
+      try {
+        const fallbackDetails = NotificationDetails(
+          android: AndroidNotificationDetails(
+            'pre_prayer_reminder_fallback',
+            'تذكير ما قبل الصلاة',
+            channelDescription: 'تنبيهات اقتراب موعد الصلاة',
+            importance: Importance.max,
+            priority: Priority.max,
+            playSound: true,
+            enableVibration: true,
+          ),
+        );
+        await _notificationsPlugin.show(
+          id: 7777,
+          title: '🔔 تنبيه: اقتراب صلاة $prayerName',
+          body:
+              'متبقي $minutesBefore دقائق على أذان صلاة $prayerName. استعد للصلاة والوضوء.',
+          notificationDetails: fallbackDetails,
+          payload: 'pre_prayer_reminder|$prayerName|$minutesBefore',
+        );
+      } catch (err) {
+        log("Fallback notification also failed: $err");
+      }
     }
   }
 

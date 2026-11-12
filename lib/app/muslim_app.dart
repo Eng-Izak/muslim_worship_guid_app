@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prayer_times_quran_azkar_app/core/routing/routing_router.dart';
@@ -26,10 +27,17 @@ class TotalMuslimApp extends StatefulWidget {
 
 class _TotalMuslimAppState extends State<TotalMuslimApp>
     with WidgetsBindingObserver {
+  static const MethodChannel _lifecycleChannel =
+      MethodChannel('com.izakrammah.muslim_worship_guid_app/lifecycle');
+
+  bool _wasDetached = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _initLifecycleChannel();
+
     if (widget.initialPendingAdhan == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         PrayerAdhanManager.checkPendingAdhanOnResume();
@@ -37,11 +45,49 @@ class _TotalMuslimAppState extends State<TotalMuslimApp>
     }
   }
 
+  void _initLifecycleChannel() {
+    _lifecycleChannel.setMethodCallHandler((call) async {
+      if (call.method == 'resetToHome') {
+        _resetToHome();
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final bool? isFresh =
+            await _lifecycleChannel.invokeMethod<bool>('checkAndResetFreshLaunch');
+        if (isFresh == true && widget.initialPendingAdhan == null) {
+          _resetToHome();
+        }
+      } catch (_) {}
+    });
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.detached) {
+      // التطبيق تم حذفه من الخلفية (Recent Apps) أو تم إنهاء نشاط الشاشة
+      _wasDetached = true;
+    } else if (state == AppLifecycleState.resumed) {
+      if (_wasDetached) {
+        _wasDetached = false;
+        _resetToHome();
+      }
       PrayerAdhanManager.checkPendingAdhanOnResume();
     }
+  }
+
+  /// إعادة ضبط التنقل للعودة للشاشة الرئيسية وحذف الشاشات المكدسة
+  void _resetToHome() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // عدم إغلاق شاشة الأذان في حال كانت مفتوحة
+      if (PrayerAdhanManager.isAdhanScreenOpen) return;
+
+      final navigator = TotalMuslimApp.navigatorKey.currentState;
+      if (navigator != null && navigator.canPop()) {
+        navigator.popUntil((route) => route.isFirst);
+      }
+    });
   }
 
   @override

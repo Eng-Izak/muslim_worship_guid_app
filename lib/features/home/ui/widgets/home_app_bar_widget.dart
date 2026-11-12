@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:prayer_times_quran_azkar_app/core/extensions/responsive_helper_extension.dart';
 import 'package:prayer_times_quran_azkar_app/core/routing/routing_names.dart';
 import 'package:prayer_times_quran_azkar_app/core/theming/theming_colors.dart';
+import 'package:prayer_times_quran_azkar_app/core/helpers/app_share_helper.dart';
 import 'package:prayer_times_quran_azkar_app/core/shared/widgets/location_disclosure_dialog.dart';
 import 'package:prayer_times_quran_azkar_app/features/home/logic/cubit/location_cubit.dart';
 
@@ -39,6 +40,15 @@ class HomeAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
+        IconButton(
+          tooltip: 'مشاركة ودعم التطبيق',
+          onPressed: () => AppShareHelper.showShareAndAppsModal(context),
+          icon: Icon(
+            Icons.share_rounded,
+            color: ThemingColors.kIconColor(context),
+            size: iconSize,
+          ),
+        ),
         // الـ BlocBuilder يوضع هنا مباشرة داخل الـ actions ليتغير شكل الأيقونة ديناميكياً
         BlocBuilder<LocationCubit, LocationState>(
           builder: (context, state) {
